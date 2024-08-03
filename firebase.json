@@ -1,0 +1,11 @@
+{
+  "hosting": {
+    "site": "pantrypal",
+    "public": "out",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}
