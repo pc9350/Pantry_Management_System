@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const SPOONACULAR_API_KEY = 'fdc4893c7fc74c5d9ed47e683564aa9c';
+const SPOONACULAR_API_KEY = 'YOUR_API_KEY';
 
 export const fetchRecipes = async (ingredients) => {
   const ingredientString = ingredients.join(',');
