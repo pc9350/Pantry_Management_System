@@ -84,7 +84,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 const CardContent = styled("div")({
   display: "flex",
   flexDirection: "column",
-  justifyContent: "space-between",
+  justifyContent: "space-evenly",
   height: "100%",
   overflow: "hidden",
   paddingBottom: "16px",
@@ -139,6 +139,15 @@ const GridItem = styled("div")(({ position }) => ({
   gridColumn: "span 1",
 }));
 
+const TruncatedListItem = styled("li")({
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  display: "-webkit-box",
+  WebkitLineClamp: 1, // Adjust the number of lines to show here
+  WebkitBoxOrient: "vertical",
+  listStyleType: "disc",
+});
+
 export default function Home() {
   const [items, setItems] = useState([]);
   const [editingItem, setEditingItem] = useState(null);
@@ -148,7 +157,7 @@ export default function Home() {
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [recipesPerPage] = useState(9);
+  const [recipesPerPage] = useState(3);
 
   const predefinedCategories = [
     "Fruit",
@@ -235,8 +244,16 @@ export default function Home() {
     setSelectedRecipe(null);
   };
 
-  useEffect(() => {
+  const clearPantry = async () => {
+    const itemsCollectionRef = collection(db, "items");
+    const itemsCollection = await getDocs(itemsCollectionRef);
+    const deletePromises = itemsCollection.docs.map(doc => deleteDoc(doc.ref));
+    await Promise.all(deletePromises);
     fetchItems();
+  };
+
+  useEffect(() => {
+    clearPantry();
   }, []);
 
   const filteredItems = items.filter(
@@ -357,7 +374,7 @@ export default function Home() {
   <GridContainer>
     {displayedRecipes.map((recipe, index) => (
       <GridItem key={recipe.id}>
-        <CardContainer>
+        <CardContainer onClick={() => handleRecipeClick(recipe)}>
           <CardContent>
             <Box>
               <TruncatedTypography variant="h6">{recipe.title}</TruncatedTypography>
@@ -379,11 +396,11 @@ export default function Home() {
                 {recipe.extendedIngredients.length > 3 && <li>...</li>}
               </ul>
             </Box>
-            <CardFooter>
+            {/* <CardFooter>
               <Button variant="contained" color="primary" onClick={() => handleRecipeClick(recipe)}>
                 View Details
               </Button>
-            </CardFooter>
+            </CardFooter> */}
           </CardContent>
         </CardContainer>
       </GridItem>

@@ -18,7 +18,7 @@ const RecipeModal = ({ open, handleClose, recipe }) => {
           <DialogTitle>{recipe.title}</DialogTitle>
           <DialogContent>
             <Box display="flex" justifyContent="center" mb={2}>
-              <img src={recipe.image} alt={recipe.title} style={{ width: '60%', height: 'auto' }} />
+              <img src={recipe.image} alt={recipe.title} style={{ width: '50%', height: 'auto' }} />
             </Box>
             <DialogContentText component="div">
               <Typography variant="h6">Ingredients</Typography>
