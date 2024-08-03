@@ -3,6 +3,7 @@ const nextConfig = {
     output: 'export',
     images: {
         domains: ['img.spoonacular.com'],
+        unoptimized: true,
       },
 };
 
