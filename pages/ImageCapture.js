@@ -13,6 +13,7 @@ const ImageCapture = () => {
   const [image, setImage] = useState(null);
   const [file, setFile] = useState(null);
   const [progress, setProgress] = useState(0);
+  const [facingMode, setFacingMode] = useState('user');
   const router = useRouter();
 
   const captureImage = () => {
@@ -77,6 +78,10 @@ const ImageCapture = () => {
     }
   };
 
+  const toggleFacingMode = () => {
+    setFacingMode((prevMode) => (prevMode === 'user' ? 'environment' : 'user'));
+  };
+
   return (
     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, alignItems: 'center', justifyContent: 'center', gap: '20px', padding: '20px' }}>
       <Box
@@ -88,7 +93,7 @@ const ImageCapture = () => {
           flexGrow: 1,
         }}
       >
-        <Camera ref={camera} />
+        <Camera ref={camera} facingMode={facingMode}/>
       </Box>
       <Box
         sx={{
@@ -116,6 +121,25 @@ const ImageCapture = () => {
           }}
         >
           Capture
+        </Button>
+        <Button
+          onClick={toggleFacingMode}
+          sx={{
+            borderRadius: '10px',
+            backgroundColor: '#FF5722',
+            color: '#FFFFFF',
+            fontWeight: 'bold',
+            fontSize: '16px',
+            padding: '10px 20px',
+            width: '100%',
+            maxWidth: '200px',
+            '@media (max-width: 600px)': {
+              fontSize: '14px',
+              padding: '8px 16px',
+            },
+          }}
+        >
+          Flip Camera
         </Button>
         {image && (
           <img
