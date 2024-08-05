@@ -39,10 +39,10 @@ export default async function handler(req, res) {
       }
 
       const content = response.choices[0].message.content;
-      // console.log("openai response:", content);
+      console.log("openai response:", content);
 
       const cleanedContent = content.replace(/```json|```/g, '').trim();
-      // console.log("Cleaned OpenAI response:", cleanedContent);
+      console.log("Cleaned OpenAI response:", cleanedContent);
 
       let items;
       try {
