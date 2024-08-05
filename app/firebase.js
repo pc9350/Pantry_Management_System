@@ -2,25 +2,26 @@
 import { firebase ,initializeApp } from "firebase/app";
 // import { getAnalytics } from "firebase/analytics";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY,
-  authDomain: "pantry-management-12dcb.firebaseapp.com",
-  projectId: "pantry-management-12dcb",
-  storageBucket: "pantry-management-12dcb.appspot.com",
-  messagingSenderId: "976240217176",
-  appId: "1:976240217176:web:2b4f138eea01f7cc008e2d",
-  measurementId: "G-VJQKR23MSS"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 // const analytics = getAnalytics(app);
-
+const storage = getStorage(app);
 const db = getFirestore(app);
 
-export { db };
+export { db, storage  };
