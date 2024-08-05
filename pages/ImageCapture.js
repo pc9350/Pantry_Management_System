@@ -91,6 +91,7 @@ const ImageCapture = () => {
     setFacingMode((prevMode) => (prevMode === 'user' ? 'environment' : 'user'));
   };
 
+
   return (
     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, alignItems: 'center', justifyContent: 'center', gap: '20px', padding: '20px' }}>
       <Box
@@ -102,7 +103,7 @@ const ImageCapture = () => {
           flexGrow: 1,
         }}
       >
-        <Camera ref={camera} facingMode={facingMode}/>
+        <Camera ref={camera} facingMode={facingMode} key={facingMode}/>
       </Box>
       <Box
         sx={{
