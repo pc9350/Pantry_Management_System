@@ -308,7 +308,7 @@ export default function Home() {
               letterSpacing: "1px",
             }}
           >
-            Pantry Management System 🧁
+            PantryPal 🧁
           </Typography>
           <Search
             sx={{
