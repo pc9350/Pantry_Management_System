@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef,useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Camera } from "react-camera-pro";
 import { storage, db } from "../app/firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
@@ -17,7 +17,7 @@ const ImageCapture = () => {
   const [image, setImage] = useState(null);
   const [file, setFile] = useState(null);
   const [progress, setProgress] = useState(0);
-  const [facingMode, setFacingMode] = useState('user');
+  const [facingMode, setFacingMode] = useState("user");
   const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
 
@@ -88,45 +88,61 @@ const ImageCapture = () => {
   };
 
   const toggleFacingMode = () => {
-    setFacingMode((prevMode) => (prevMode === 'user' ? 'environment' : 'user'));
+    setFacingMode((prevMode) => (prevMode === "user" ? "environment" : "user"));
   };
 
-
   return (
-    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, alignItems: 'center', justifyContent: 'center', gap: '20px', padding: '20px' }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: { xs: "column", lg: "row" },
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "20px",
+        padding: "20px",
+      }}
+    >
       <Box
         sx={{
-          width: '100%',
-          maxWidth: '1000px',
-          aspectRatio: '16/9',
-          position: 'relative',
+          width: "100%",
+          maxWidth: "1000px",
+          aspectRatio: "16/9",
+          position: "relative",
           flexGrow: 1,
         }}
       >
-        <Camera ref={camera} facingMode={facingMode} key={facingMode}/>
+        <Camera ref={camera} facingMode={facingMode} key={facingMode} />
       </Box>
       <Box
         sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '10px',
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "10px",
         }}
       >
         <Button
           onClick={captureImage}
           sx={{
-            borderRadius: '10px',
-            backgroundColor: '#FF5722',
-            color: '#FFFFFF',
-            fontWeight: 'bold',
-            fontSize: '16px',
-            padding: '10px 20px',
-            width: '100%',
-            maxWidth: '200px',
-            '@media (max-width: 600px)': {
-              fontSize: '14px',
-              padding: '8px 16px',
+            borderRadius: "10px",
+            backgroundColor: "#FF5722",
+            color: "#FFFFFF",
+            fontWeight: "bold",
+            fontSize: "16px",
+            padding: "10px 20px",
+            width: "100%",
+            maxWidth: "200px",
+            "@media (max-width: 600px)": {
+              fontSize: "14px",
+              padding: "8px 16px",
+            },
+            "&:active": {
+              backgroundColor: "#FF5722",
+              color: "#FFFFFF",
+            },
+            "&:focus": {
+              backgroundColor: "#FF5722",
+              color: "#FFFFFF",
             },
           }}
         >
@@ -136,17 +152,25 @@ const ImageCapture = () => {
           <Button
             onClick={toggleFacingMode}
             sx={{
-              borderRadius: '10px',
-              backgroundColor: '#FF5722',
-              color: '#FFFFFF',
-              fontWeight: 'bold',
-              fontSize: '16px',
-              padding: '10px 20px',
-              width: '100%',
-              maxWidth: '200px',
-              '@media (max-width: 600px)': {
-                fontSize: '14px',
-                padding: '8px 16px',
+              borderRadius: "10px",
+              backgroundColor: "#FF5722",
+              color: "#FFFFFF",
+              fontWeight: "bold",
+              fontSize: "16px",
+              padding: "10px 20px",
+              width: "100%",
+              maxWidth: "200px",
+              "@media (max-width: 600px)": {
+                fontSize: "14px",
+                padding: "8px 16px",
+              },
+              "&:active": {
+                backgroundColor: "#FF5722",
+                color: "#FFFFFF",
+              },
+              "&:focus": {
+                backgroundColor: "#FF5722",
+                color: "#FFFFFF",
               },
             }}
           >
@@ -157,7 +181,7 @@ const ImageCapture = () => {
           <img
             src={image}
             alt="captured"
-            style={{ width: '100%', marginTop: '10px' }}
+            style={{ width: "100%", marginTop: "10px" }}
           />
         )}
         {file && (
@@ -166,41 +190,53 @@ const ImageCapture = () => {
               onClick={handleUpload}
               disabled={!file}
               sx={{
-                borderRadius: '10px',
-                backgroundColor: '#4CAF50',
-                color: '#FFFFFF',
-                fontWeight: 'bold',
-                fontSize: '16px',
-                padding: '10px 20px',
-                width: '100%',
-                maxWidth: '200px',
-                '@media (max-width: 600px)': {
-                  fontSize: '14px',
-                  padding: '8px 16px',
+                borderRadius: "10px",
+                backgroundColor: "#4CAF50",
+                color: "#FFFFFF",
+                fontWeight: "bold",
+                fontSize: "16px",
+                padding: "10px 20px",
+                width: "100%",
+                maxWidth: "200px",
+                "@media (max-width: 600px)": {
+                  fontSize: "14px",
+                  padding: "8px 16px",
+                },
+                "&:active": {
+                  backgroundColor: "#FF5722",
+                  color: "#FFFFFF",
+                },
+                "&:focus": {
+                  backgroundColor: "#FF5722",
+                  color: "#FFFFFF",
                 },
               }}
             >
               Upload and Analyze
             </Button>
             {progress > 0 && (
-              <LinearProgress variant="determinate" value={progress} sx={{ marginTop: '10px' }} />
+              <LinearProgress
+                variant="determinate"
+                value={progress}
+                sx={{ marginTop: "10px" }}
+              />
             )}
           </Box>
         )}
         <Button
-          onClick={() => router.push('/')}
+          onClick={() => router.push("/")}
           sx={{
-            borderRadius: '10px',
-            backgroundColor: '#2196F3',
-            color: '#FFFFFF',
-            fontWeight: 'bold',
-            fontSize: '16px',
-            padding: '10px 20px',
-            width: '100%',
-            maxWidth: '200px',
-            '@media (max-width: 600px)': {
-              fontSize: '14px',
-              padding: '8px 16px',
+            borderRadius: "10px",
+            backgroundColor: "#2196F3",
+            color: "#FFFFFF",
+            fontWeight: "bold",
+            fontSize: "16px",
+            padding: "10px 20px",
+            width: "100%",
+            maxWidth: "200px",
+            "@media (max-width: 600px)": {
+              fontSize: "14px",
+              padding: "8px 16px",
             },
           }}
         >
