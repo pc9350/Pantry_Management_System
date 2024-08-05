@@ -48,6 +48,7 @@ import MenuBookIcon from "@mui/icons-material/MenuBook";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import { v4 as uuidv4 } from "uuid";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -91,14 +92,15 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-const CardContent = styled("div")({
+const CardContent = styled("div")(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
-  justifyContent: "space-evenly",
+  justifyContent: "space-between",
   height: "100%",
-  overflow: "hidden",
-  paddingBottom: "16px",
-});
+  [theme.breakpoints.down("sm")]: {
+    height: "auto",
+  },
+}));
 
 const TruncatedTypography = styled(Typography)({
   overflow: "hidden",
@@ -120,7 +122,7 @@ const CardContainer = styled(Paper)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
   justifyContent: "space-between",
-  height: "500px", // Adjust the height as needed
+  height: "100%",
   boxShadow: "0 4px 8px 0 rgba(0, 0, 0, 0.2)",
   border: "1px solid #ddd",
   transition: "transform 0.2s, box-shadow 0.2s",
@@ -128,16 +130,20 @@ const CardContainer = styled(Paper)(({ theme }) => ({
     transform: "scale(1.03)",
     boxShadow: "0 8px 16px 0 rgba(0, 0, 0, 0.2)",
   },
+  [theme.breakpoints.down("sm")]: {
+    height: "auto",
+  },
 }));
 
-const GridContainer = styled("div")({
+const GridContainer = styled("div")(({ theme }) => ({
   display: "grid",
-  gridTemplateColumns: "repeat(3, 1fr)", // Three columns
-  gridTemplateRows: "repeat(2, auto)", // Two rows
-  gridAutoRows: "auto",
-  gap: "25px", // Space between cards
-  alignItems: "center",
-});
+  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+  gap: "25px",
+  [theme.breakpoints.down("sm")]: {
+    gridTemplateColumns: "1fr",
+    gap: "20px",
+  },
+}));
 
 const GridItem = styled("div")(({ position }) => ({
   gridColumn: "span 1",
@@ -701,9 +707,12 @@ export default function Home() {
       </Container>
       <Container sx={{ marginTop: 4, marginBottom: 4 }}>
         <GridContainer>
-          {displayedRecipes.map((recipe, index) => (
-            <GridItem key={recipe.id}>
-              <CardContainer onClick={() => handleRecipeClick(recipe)}>
+          {displayedRecipes.map((recipe, index) => {
+            return (
+              <CardContainer
+                key={`${recipe.id}-${uuidv4()}`}
+                onClick={() => handleRecipeClick(recipe)}
+              >
                 <CardContent>
                   <Box>
                     <TruncatedTypography variant="h6">
@@ -713,28 +722,38 @@ export default function Home() {
                       component="img"
                       image={recipe.image}
                       alt={recipe.title}
-                      style={{ width: "100%", height: "auto" }}
+                      sx={{
+                        width: "100%",
+                        height: "auto",
+                        maxHeight: "200px",
+                        objectFit: "cover",
+                      }}
                     />
                   </Box>
-                  <Box>
-                    <IngredientsTypography variant="body1">
+                  <Box sx={{ mt: 2 }}>
+                    <IngredientsTypography variant="body2">
                       <strong>Ingredients:</strong>
                     </IngredientsTypography>
-                    <ul>
+                    <ul style={{ paddingLeft: "20px", margin: "8px 0" }}>
                       {recipe.extendedIngredients
                         .slice(0, 3)
-                        .map((ingredient, idx) => (
-                          <li key={`${ingredient.id}-${idx}`}>
-                            {ingredient.original}
-                          </li>
-                        ))}
-                      {recipe.extendedIngredients.length > 3 && <li>...</li>}
+                        .map((ingredient, idx) => {
+                          const key = `${recipe.id}-${ingredient.id}-${idx}-${uuidv4()}`
+                          return (
+                            <li key={key} style={{ fontSize: "0.9rem" }}>
+                              {ingredient.original}
+                            </li>
+                          );
+                        })}
+                      {recipe.extendedIngredients.length > 3 && (
+                        <li style={{ fontSize: "0.9rem" }}>...</li>
+                      )}
                     </ul>
                   </Box>
                 </CardContent>
               </CardContainer>
-            </GridItem>
-          ))}
+            );
+          })}
         </GridContainer>
         {displayedRecipes.length < recipes.length && (
           <Box sx={{ display: "flex", justifyContent: "center", marginTop: 4 }}>
