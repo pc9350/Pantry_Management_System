@@ -6,7 +6,7 @@ export const fetchRecipes = async (ingredients) => {
   const response = await axios.get(`https://api.spoonacular.com/recipes/findByIngredients`, {
     params: {
       ingredients: ingredientString,
-      number: 5,  // Number of recipes to return
+      number: 6,  // Number of recipes to return
       apiKey: process.env.NEXT_PUBLIC_SPOONACULAR_API_KEY,
     }
   });
