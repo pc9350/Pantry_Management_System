@@ -74,6 +74,7 @@ const ImageCapture = () => {
                 name: item.name,
                 quantity: item.quantity || 1,
                 category: item.category || "Unknown",
+                unit: item.unit || "piece",
                 imageUrl: downloadURL,
                 createdAt: new Date(),
               });
