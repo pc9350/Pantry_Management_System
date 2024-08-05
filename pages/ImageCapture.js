@@ -78,33 +78,40 @@ const ImageCapture = () => {
   };
 
   return (
-    <Box>
-      <Camera ref={camera} aspectRatio={16 / 9} />
+    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, alignItems: 'center', justifyContent: 'center', gap: '20px', padding: '20px' }}>
       <Box
         sx={{
-          display: "flex",
-          flexDirection: { xs: "column", sm: "row" },
-          alignItems: "center",
-          marginTop: "10px",
-          gap: "10px",
+          width: '100%',
+          maxWidth: '1000px',
+          aspectRatio: '16/9',
+          position: 'relative',
+          flexGrow: 1,
+        }}
+      >
+        <Camera ref={camera} />
+      </Box>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '10px',
         }}
       >
         <Button
           onClick={captureImage}
           sx={{
-            // minHeight: "50px",
-            borderRadius: "10px",
-            backgroundColor: "#FF5722",
-            color: "#FFFFFF",
-            fontWeight: "bold",
-            fontSize: "16px",
-            padding: "10px 20px",
-            margin: "10px",
-            width: "100%",
-            maxWidth: "200px",
-            "@media (max-width: 600px)": {
-              fontSize: "14px",
-              padding: "8px 16px",
+            borderRadius: '10px',
+            backgroundColor: '#FF5722',
+            color: '#FFFFFF',
+            fontWeight: 'bold',
+            fontSize: '16px',
+            padding: '10px 20px',
+            width: '100%',
+            maxWidth: '200px',
+            '@media (max-width: 600px)': {
+              fontSize: '14px',
+              padding: '8px 16px',
             },
           }}
         >
@@ -114,7 +121,7 @@ const ImageCapture = () => {
           <img
             src={image}
             alt="captured"
-            style={{ width: "100%", marginTop: "10px" }}
+            style={{ width: '100%', marginTop: '10px' }}
           />
         )}
         {file && (
@@ -123,43 +130,41 @@ const ImageCapture = () => {
               onClick={handleUpload}
               disabled={!file}
               sx={{
-                borderRadius: "10px",
-                backgroundColor: "#4CAF50",
-                color: "#FFFFFF",
-                fontWeight: "bold",
-                fontSize: "16px",
-                padding: "10px 20px",
-                margin: "10px",
-                width: "100%", 
-                maxWidth: "200px", 
-                "@media (max-width: 600px)": {
-                  fontSize: "14px",
-                  padding: "8px 16px",
+                borderRadius: '10px',
+                backgroundColor: '#4CAF50',
+                color: '#FFFFFF',
+                fontWeight: 'bold',
+                fontSize: '16px',
+                padding: '10px 20px',
+                width: '100%',
+                maxWidth: '200px',
+                '@media (max-width: 600px)': {
+                  fontSize: '14px',
+                  padding: '8px 16px',
                 },
               }}
             >
               Upload and Analyze
             </Button>
             {progress > 0 && (
-              <LinearProgress variant="determinate" value={progress} />
+              <LinearProgress variant="determinate" value={progress} sx={{ marginTop: '10px' }} />
             )}
           </Box>
         )}
         <Button
-          onClick={() => router.push("/")}
+          onClick={() => router.push('/')}
           sx={{
-            borderRadius: "10px",
-            backgroundColor: "#2196F3",
-            color: "#FFFFFF",
-            fontWeight: "bold",
-            fontSize: "16px",
-            padding: "10px 20px",
-            margin: "10px",
-            width: "100%",
-            maxWidth: "200px",
-            "@media (max-width: 600px)": {
-              fontSize: "14px",
-              padding: "8px 16px",
+            borderRadius: '10px',
+            backgroundColor: '#2196F3',
+            color: '#FFFFFF',
+            fontWeight: 'bold',
+            fontSize: '16px',
+            padding: '10px 20px',
+            width: '100%',
+            maxWidth: '200px',
+            '@media (max-width: 600px)': {
+              fontSize: '14px',
+              padding: '8px 16px',
             },
           }}
         >
