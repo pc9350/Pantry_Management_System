@@ -27,8 +27,11 @@ import {
   Button,
   InputBase,
   CardMedia,
+  Menu,
+  MenuItem,
+  Modal,
 } from "@mui/material";
-import { styled, alpha, useTheme } from "@mui/material/styles";
+import { styled, alpha, useTheme, useMediaQuery } from "@mui/material";
 import KitchenIcon from "@mui/icons-material/Kitchen";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -42,6 +45,9 @@ import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import { keyframes } from "@emotion/react";
 import { motion } from "framer-motion";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
+import MenuIcon from "@mui/icons-material/Menu";
+import CloseIcon from "@mui/icons-material/Close";
+import RefreshIcon from "@mui/icons-material/Refresh";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -153,9 +159,12 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   const [recipesPerPage] = useState(3);
   const [isButtonHovered, setIsButtonHovered] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   const router = useRouter();
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const predefinedCategories = [
     "Fruit",
@@ -256,6 +265,7 @@ export default function Home() {
     if (!localStorage.getItem("pantryCleared")) {
       clearPantry().then(() => {
         localStorage.setItem("pantryCleared", "true");
+        fetchItems();
       });
     } else {
       fetchItems();
@@ -274,6 +284,32 @@ export default function Home() {
   };
 
   const displayedRecipes = recipes.slice(0, currentPage * recipesPerPage);
+
+  const handleMenu = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+  };
+
+  const handleSearchModalOpen = () => {
+    setIsSearchModalOpen(true);
+    handleClose();
+  };
+
+  const handleSearchModalClose = () => {
+    setIsSearchModalOpen(false);
+  };
+
+  const resetSearch = () => {
+    setSearchQuery("");
+    fetchItems();
+  };
+
+  const handleRefresh = () => {
+    resetSearch();
+  };
 
   return (
     <Box sx={{ flexGrow: 1, m: 0, p: 0 }}>
@@ -299,7 +335,7 @@ export default function Home() {
             </IconButton>
           </motion.div>
           <Typography
-            variant="h6"
+            variant={isMobile ? "h6" : "h5"}
             component="div"
             sx={{
               flexGrow: 1,
@@ -310,20 +346,125 @@ export default function Home() {
           >
             PantryPal 🧁
           </Typography>
-          <Search
+          {isMobile ? (
+            <>
+              <IconButton
+                color="inherit"
+                aria-label="refresh"
+                onClick={handleRefresh}
+                sx={{ mr: 1 }}
+              >
+                <RefreshIcon />
+              </IconButton>
+              <IconButton
+                size="large"
+                edge="start"
+                color="inherit"
+                aria-label="menu"
+                onClick={handleMenu}
+              >
+                <MenuIcon />
+              </IconButton>
+              <Menu
+                id="menu-appbar"
+                anchorEl={anchorEl}
+                anchorOrigin={{
+                  vertical: "top",
+                  horizontal: "right",
+                }}
+                keepMounted
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "right",
+                }}
+                open={Boolean(anchorEl)}
+                onClose={handleCloseMenu}
+              >
+                <MenuItem onClick={handleSearchModalOpen}>Search</MenuItem>
+                {/* Add more menu items here if needed */}
+              </Menu>
+            </>
+          ) : (
+            <>
+              <Search>
+                <SearchIconWrapper>
+                  <SearchIcon />
+                </SearchIconWrapper>
+                <StyledInputBase
+                  placeholder="Search…"
+                  inputProps={{ "aria-label": "search" }}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <IconButton
+                    size="small"
+                    onClick={resetSearch}
+                    sx={{
+                      position: "absolute",
+                      right: 0,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                    }}ddddddddd
+                  >
+                    <CloseIcon fontSize="small" sx={{ color: "white" }} />
+                  </IconButton>
+                )}
+              </Search>
+              <IconButton
+                color="inherit"
+                aria-label="refresh"
+                onClick={handleRefresh}
+                sx={{ ml: 1 }}
+              >
+                <RefreshIcon />
+              </IconButton>
+            </>
+          )}
+        </Toolbar>
+      </AppBar>
+
+      <Modal
+        open={isSearchModalOpen}
+        onClose={handleSearchModalClose}
+        aria-labelledby="search-modal"
+        aria-describedby="search-modal-description"
+      >
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "90%",
+            maxWidth: 400,
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+          }}
+        >
+          <IconButton
+            aria-label="close"
+            onClick={handleSearchModalClose}
             sx={{
-              position: "relative",
-              borderRadius: "20px",
-              backgroundColor: "rgba(255, 255, 255, 0.15)",
-              "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.25)" },
-              marginLeft: 0,
-              width: "100%",
-              [theme.breakpoints.up("sm")]: {
-                marginLeft: theme.spacing(1),
-                width: "auto",
-              },
+              position: "absolute",
+              right: 8,
+              top: 8,
+              color: (theme) => theme.palette.grey[500],
             }}
           >
+            <CloseIcon />
+          </IconButton>
+          <Typography
+            id="search-modal"
+            variant="h6"
+            component="h2"
+            sx={{ mb: 2 }}
+          >
+            Search
+          </Typography>
+          <Search sx={{ position: "relative" }}>
             <SearchIconWrapper>
               <SearchIcon />
             </SearchIconWrapper>
@@ -332,25 +473,25 @@ export default function Home() {
               inputProps={{ "aria-label": "search" }}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              sx={{
-                color: "inherit",
-                "& .MuiInputBase-input": {
-                  padding: theme.spacing(1, 1, 1, 0),
-                  paddingLeft: `calc(1em + ${theme.spacing(4)})`,
-                  transition: theme.transitions.create("width"),
-                  width: "100%",
-                  [theme.breakpoints.up("sm")]: {
-                    width: "12ch",
-                    "&:focus": {
-                      width: "20ch",
-                    },
-                  },
-                },
-              }}
+              autoFocus
             />
+            {searchQuery && (
+              <IconButton
+                size="small"
+                onClick={resetSearch}
+                sx={{
+                  position: "absolute",
+                  right: 0,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                }}
+              >
+                clear
+              </IconButton>
+            )}
           </Search>
-        </Toolbar>
-      </AppBar>
+        </Box>
+      </Modal>
       <Container maxWidth="md" sx={{ mt: 4 }}>
         <Stack spacing={3}>
           <Box
@@ -360,20 +501,27 @@ export default function Home() {
               alignItems: "center",
             }}
           >
-            <Typography
-              variant="h4"
-              gutterBottom
-              sx={{
-                background: "linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)",
-                backgroundClip: "text",
-                textFillColor: "transparent",
-                fontWeight: "bold",
-                textAlign: "center",
-                mb: 3,
-              }}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
             >
-              Welcome to Your Pantry!!
-            </Typography>
+              <Typography
+                variant={isMobile ? "h5" : "h4"}
+                gutterBottom
+                sx={{
+                  background:
+                    "linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)",
+                  backgroundClip: "text",
+                  textFillColor: "transparent",
+                  fontWeight: "bold",
+                  textAlign: "center",
+                  mb: 3,
+                }}
+              >
+                Welcome to Your Pantry!!
+              </Typography>
+            </motion.div>
             <Box
               sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 3 }}
             >
@@ -534,123 +682,6 @@ export default function Home() {
           </Box>
         </Stack>
       </Container>
-      {/* <Container maxWidth="md" sx={{ mt: 4 }}>
-        <Stack spacing={3}>
-          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-            <Typography variant="h4" gutterBottom>
-              Welcome to Your Pantry!!
-            </Typography>
-            <Box sx={{ display: "flex", justifyContent: "space-evenly" }}>
-              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <Button
-                  color="secondary"
-                  size="small"
-                  variant="outlined"
-                  onClick={() => handleClickOpen(null)}
-                  sx={{
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      background:
-                        "linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)",
-                      color: "white",
-                      boxShadow: "0 0 10px #ff4081",
-                    },
-                    "&:hover .addIcon": {
-                      animation: `${rotateAnimation} 1s linear infinite`,
-                    },
-                  }}
-                >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      minHeight: "47px",
-                    }}
-                  >
-                    <AddIcon className="addIcon" /> Add Item
-                  </Box>
-                </Button>
-              </motion.div>
-              <Button
-                onClick={() => router.push("/ImageCapture")}
-                sx={{
-                  marginLeft: "10px",
-                  transition: "all 0.3s ease",
-                  background:
-                    "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
-                  color: "white",
-                  "&:hover": {
-                    transform: "scale(1.05)",
-                    boxShadow: "0 0 15px #2196F3",
-                  },
-                  "&:active": {
-                    transform: "scale(0.95)",
-                  },
-                }}
-              >
-                <AddAPhotoIcon sx={{ marginRight: "5px" }} />
-                Capture Image
-              </Button>
-            </Box>
-          </Box>
-          <TableContainer component={Paper}>
-            <Table sx={{ minWidth: 650 }} aria-label="pantry items table">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell align="right">Quantity</TableCell>
-                  <TableCell align="right">Category</TableCell>
-                  <TableCell align="right">Unit</TableCell>
-                  <TableCell align="right">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredItems.map((item) => (
-                  <TableRow
-                    key={item.id}
-                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                  >
-                    <TableCell component="th" scope="row">
-                      {item.name}
-                    </TableCell>
-                    <TableCell align="right">{item.quantity}</TableCell>
-                    <TableCell align="right">{item.category}</TableCell>
-                    <TableCell align="right">{item.unit}</TableCell>
-                    <TableCell align="right">
-                      <EditIcon
-                        sx={{ marginRight: "10px" }}
-                        onClick={() => handleClickOpen(item)}
-                        style={{ cursor: "pointer" }}
-                      />
-                      <DeleteIcon
-                        onClick={() => deleteItem(item.id)}
-                        style={{ cursor: "pointer" }}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <Box
-            sx={{
-              flexGrow: 1,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Button
-              variant="outlined"
-              color="secondary"
-              onClick={handleFetchRecipes}
-              size="medium"
-            >
-              Suggest Recipes
-            </Button>
-          </Box>
-        </Stack>
-      </Container> */}
       <Container sx={{ marginTop: 4, marginBottom: 4 }}>
         <GridContainer>
           {displayedRecipes.map((recipe, index) => (
