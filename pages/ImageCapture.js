@@ -57,6 +57,8 @@ const ImageCapture = () => {
           // Analyze the image and get item names using the URL
           const items = await analyzeImageWithGptVisionAPI(downloadURL);
 
+          // console.log("Items detected:", items);
+
           // Store the image URL in Firestore
           await addDoc(collection(db, "images"), {
             imageUrl: downloadURL,
