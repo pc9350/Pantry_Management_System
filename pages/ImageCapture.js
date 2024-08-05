@@ -8,13 +8,22 @@ import { Box, Button, LinearProgress } from "@mui/material";
 import { analyzeImageWithGptVisionAPI } from "../app/visionApi";
 import { useRouter } from "next/router";
 
+const isMobileDevice = () => {
+  return /Mobi|Android/i.test(navigator.userAgent);
+};
+
 const ImageCapture = () => {
   const camera = useRef(null);
   const [image, setImage] = useState(null);
   const [file, setFile] = useState(null);
   const [progress, setProgress] = useState(0);
   const [facingMode, setFacingMode] = useState('user');
+  const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    setIsMobile(isMobileDevice());
+  }, []);
 
   const captureImage = () => {
     const photo = camera.current.takePhoto();
@@ -122,25 +131,27 @@ const ImageCapture = () => {
         >
           Capture
         </Button>
-        <Button
-          onClick={toggleFacingMode}
-          sx={{
-            borderRadius: '10px',
-            backgroundColor: '#FF5722',
-            color: '#FFFFFF',
-            fontWeight: 'bold',
-            fontSize: '16px',
-            padding: '10px 20px',
-            width: '100%',
-            maxWidth: '200px',
-            '@media (max-width: 600px)': {
-              fontSize: '14px',
-              padding: '8px 16px',
-            },
-          }}
-        >
-          Flip Camera
-        </Button>
+        {isMobile && (
+          <Button
+            onClick={toggleFacingMode}
+            sx={{
+              borderRadius: '10px',
+              backgroundColor: '#FF5722',
+              color: '#FFFFFF',
+              fontWeight: 'bold',
+              fontSize: '16px',
+              padding: '10px 20px',
+              width: '100%',
+              maxWidth: '200px',
+              '@media (max-width: 600px)': {
+                fontSize: '14px',
+                padding: '8px 16px',
+              },
+            }}
+          >
+            Flip Camera
+          </Button>
+        )}
         {image && (
           <img
             src={image}
