@@ -158,7 +158,6 @@ export default function Home() {
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [recipesPerPage] = useState(3);
-  const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
@@ -405,7 +404,8 @@ export default function Home() {
                       right: 0,
                       top: "50%",
                       transform: "translateY(-50%)",
-                    }}ddddddddd
+                    }}
+                    ddddddddd
                   >
                     <CloseIcon fontSize="small" sx={{ color: "white" }} />
                   </IconButton>
@@ -577,84 +577,101 @@ export default function Home() {
             </Box>
           </Box>
 
-          <TableContainer
-            component={Paper}
-            elevation={3}
-            sx={{ borderRadius: 2, overflow: "hidden" }}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
           >
-            <Table sx={{ minWidth: 650 }} aria-label="pantry items table">
-              <TableHead>
-                <TableRow
-                  sx={{
-                    background:
-                      "linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)",
-                  }}
-                >
-                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                    Name
-                  </TableCell>
-                  <TableCell
-                    align="right"
-                    sx={{ color: "white", fontWeight: "bold" }}
-                  >
-                    Quantity
-                  </TableCell>
-                  <TableCell
-                    align="right"
-                    sx={{ color: "white", fontWeight: "bold" }}
-                  >
-                    Category
-                  </TableCell>
-                  <TableCell
-                    align="right"
-                    sx={{ color: "white", fontWeight: "bold" }}
-                  >
-                    Unit
-                  </TableCell>
-                  <TableCell
-                    align="right"
-                    sx={{ color: "white", fontWeight: "bold" }}
-                  >
-                    Actions
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredItems.map((item) => (
+            <TableContainer
+              component={Paper}
+              elevation={3}
+              sx={{ borderRadius: 2, overflow: "hidden" }}
+            >
+              <Table
+                sx={{ minWidth: { xs: 300, sm: 450, md: 650 } }}
+                aria-label="pantry items table"
+              >
+                <TableHead>
                   <TableRow
-                    key={item.id}
                     sx={{
-                      "&:last-child td, &:last-child th": { border: 0 },
-                      "&:nth-of-type(odd)": { backgroundColor: "#f5f5f5" },
-                      transition: "background-color 0.3s",
-                      "&:hover": { backgroundColor: "#e0e0e0" },
+                      background:
+                        "linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)",
                     }}
                   >
-                    <TableCell component="th" scope="row">
-                      {item.name}
+                    <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                      Name
                     </TableCell>
-                    <TableCell align="right">{item.quantity}</TableCell>
-                    <TableCell align="right">{item.category}</TableCell>
-                    <TableCell align="right">{item.unit}</TableCell>
-                    <TableCell align="right">
-                      <IconButton
-                        onClick={() => handleClickOpen(item)}
-                        size="small"
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        onClick={() => deleteItem(item.id)}
-                        size="small"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
+                    {!isMobile && (
+                      <>
+                        <TableCell
+                          align="right"
+                          sx={{ color: "white", fontWeight: "bold" }}
+                        >
+                          Category
+                        </TableCell>
+                        <TableCell
+                          align="right"
+                          sx={{ color: "white", fontWeight: "bold" }}
+                        >
+                          Unit
+                        </TableCell>
+                      </>
+                    )}
+                    <TableCell
+                      align="right"
+                      sx={{ color: "white", fontWeight: "bold" }}
+                    >
+                      Quantity
+                    </TableCell>
+                    <TableCell
+                      align="right"
+                      sx={{ color: "white", fontWeight: "bold" }}
+                    >
+                      Actions
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                </TableHead>
+                <TableBody>
+                  {filteredItems.map((item, index) => (
+                    <motion.tr
+                      key={item.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                      style={{
+                        backgroundColor: index % 2 === 0 ? "#f5f5f5" : "white",
+                      }}
+                    >
+                      <TableCell component="th" scope="row">
+                        {item.name}
+                      </TableCell>
+                      {!isMobile && (
+                        <>
+                          <TableCell align="right">{item.category}</TableCell>
+                          <TableCell align="right">{item.unit}</TableCell>
+                        </>
+                      )}
+                      <TableCell align="right">{item.quantity}</TableCell>
+                      <TableCell align="right">
+                        <IconButton
+                          onClick={() => handleClickOpen(item)}
+                          size="small"
+                        >
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton
+                          onClick={() => deleteItem(item.id)}
+                          size="small"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </TableCell>
+                    </motion.tr>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </motion.div>
 
           <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
