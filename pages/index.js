@@ -351,32 +351,6 @@ export default function Home() {
           </Search>
         </Toolbar>
       </AppBar>
-      {/* <AppBar position="static" sx={{ width: "100%" }}>
-        <Toolbar>
-          <IconButton
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            sx={{ mr: 2 }}
-          >
-            <KitchenIcon />
-          </IconButton>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Pantry Management System 🧁
-          </Typography>
-          <Search>
-            <SearchIconWrapper>
-              <SearchIcon />
-            </SearchIconWrapper>
-            <StyledInputBase
-              placeholder="Search…"
-              inputProps={{ "aria-label": "search" }}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </Search>
-        </Toolbar>
-      </AppBar> */}
       <Container maxWidth="md" sx={{ mt: 4 }}>
         <Stack spacing={3}>
           <Box
