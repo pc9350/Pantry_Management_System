@@ -92,7 +92,7 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 ## 📧 Contact
 
-For more information or support, please reach out to Pranav Chhabra at [chhabrapranav2001@gmail.com](mailto:chhabrapranav2001@gmail.com).
+For more information or support, please reach out at [chhabrapranav2001@gmail.com](mailto:chhabrapranav2001@gmail.com).
 
 ---
 
