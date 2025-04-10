@@ -10,10 +10,10 @@ import { Box } from '@mui/material';
 
 // Simple particles implementation without instancing
 const SimpleParticles = ({ count = 100, colors }) => {
-  const colorOptions = colors || ['#4caf50', '#ff9800', '#ff6b6b', '#f8f9fa', '#fcc419'];
-  
   // Generate random particles data
   const particles = useMemo(() => {
+    const colorOptions = colors || ['#4caf50', '#ff9800', '#ff6b6b', '#f8f9fa', '#fcc419'];
+    
     return Array.from({ length: count }, () => ({
       position: [
         (Math.random() - 0.5) * 30,
@@ -25,7 +25,7 @@ const SimpleParticles = ({ count = 100, colors }) => {
       rotation: [Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI],
       speed: Math.random() * 0.02 + 0.01
     }));
-  }, [count, colorOptions]);
+  }, [count, colors]);
   
   return (
     <group>

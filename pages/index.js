@@ -66,8 +66,86 @@ import { v4 as uuidv4 } from "uuid";
 
 // Import lightweight design components instead of 3D
 import PantryAnalytics from "../app/components/PantryAnalytics";
-import FoodPatternBackground from "../app/components/design/FoodPatternBackground";
-import FoodGradientBackground from "../app/components/design/FoodGradientBackground";
+
+// Import with a try-catch to handle potential import errors
+let FoodPatternBackground;
+try {
+  FoodPatternBackground = require("../app/components/design/FoodPatternBackground").default;
+} catch (error) {
+  // Fallback for simple pattern background
+  FoodPatternBackground = ({ category, density, opacity }) => {
+    const bgColors = {
+      fruit: 'rgba(255, 107, 107, 0.05)',
+      vegetable: 'rgba(81, 207, 102, 0.05)',
+      meat: 'rgba(230, 73, 128, 0.05)',
+      dairy: 'rgba(248, 249, 250, 0.05)',
+      grain: 'rgba(252, 196, 25, 0.05)',
+      mixed: 'rgba(173, 181, 189, 0.05)',
+    };
+    
+    const bgColor = bgColors[category] || bgColors.mixed;
+    
+    return (
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: -1,
+          opacity,
+          bgcolor: bgColor,
+          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)',
+          backgroundSize: '20px 20px',
+        }}
+      />
+    );
+  };
+}
+FoodPatternBackground.displayName = 'FoodPatternBackground';
+
+// Add fallback for gradient background
+let FoodGradientBackground;
+try {
+  FoodGradientBackground = require("../app/components/design/FoodGradientBackground").default;
+} catch (error) {
+  // Fallback for simple gradient background
+  FoodGradientBackground = ({ theme, animate, opacity }) => {
+    const gradientThemes = {
+      fresh: 'linear-gradient(135deg, rgba(120, 224, 143, 0.8), rgba(250, 211, 144, 0.8))',
+      warm: 'linear-gradient(45deg, rgba(225, 112, 85, 0.8), rgba(250, 177, 160, 0.8))',
+      cool: 'linear-gradient(225deg, rgba(116, 185, 255, 0.8), rgba(162, 155, 254, 0.8))',
+      dessert: 'linear-gradient(315deg, rgba(225, 177, 44, 0.8), rgba(253, 121, 168, 0.8))',
+    };
+    
+    const gradient = gradientThemes[theme] || gradientThemes.fresh;
+    
+    return (
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: gradient,
+          opacity,
+          zIndex: -2,
+          pointerEvents: 'none',
+          animation: animate ? 'gradientShift 15s ease infinite' : 'none',
+          '@keyframes gradientShift': {
+            '0%': { backgroundPosition: '0% 50%' },
+            '50%': { backgroundPosition: '100% 50%' },
+            '100%': { backgroundPosition: '0% 50%' },
+          },
+          backgroundSize: animate ? '200% 200%' : '100% 100%',
+        }}
+      />
+    );
+  };
+}
+FoodGradientBackground.displayName = 'FoodGradientBackground';
 
 // Styled components with enhanced visuals
 const Search = styled("div")(({ theme }) => ({
@@ -86,6 +164,7 @@ const Search = styled("div")(({ theme }) => ({
     width: "auto",
   },
 }));
+Search.displayName = "Search";
 
 const SearchIconWrapper = styled("div")(({ theme }) => ({
   padding: theme.spacing(0, 2),
@@ -96,6 +175,7 @@ const SearchIconWrapper = styled("div")(({ theme }) => ({
   alignItems: "center",
   justifyContent: "center",
 }));
+SearchIconWrapper.displayName = "SearchIconWrapper";
 
 const StyledInputBase = styled(InputBase)(({ theme }) => ({
   color: "inherit",
@@ -112,6 +192,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
     },
   },
 }));
+StyledInputBase.displayName = "StyledInputBase";
 
 const TruncatedTypography = styled(Typography)({
   overflow: "hidden",
@@ -122,11 +203,13 @@ const TruncatedTypography = styled(Typography)({
   fontWeight: "bold",
   fontSize: "1.2rem",
 });
+TruncatedTypography.displayName = "TruncatedTypography";
 
 const IngredientsTypography = styled(Typography)({
   fontSize: "0.9rem",
   margin: "8px 0",
 });
+IngredientsTypography.displayName = "IngredientsTypography";
 
 const CardContainer = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(2),
@@ -148,14 +231,18 @@ const CardContainer = styled(Paper)(({ theme }) => ({
     height: "auto",
   },
 }));
+CardContainer.displayName = "CardContainer";
 
-const MainContainer = styled(Container)(({ theme }) => ({
+const MainContainer = styled(Container, { 
+  shouldForwardProp: (prop) => prop !== "theme" 
+})(({ theme }) => ({
   position: "relative",
   zIndex: 1,
   marginTop: -100,
   paddingTop: 0,
   paddingBottom: theme.spacing(8),
 }));
+MainContainer.displayName = "MainContainer";
 
 const SectionTitle = styled(Typography)(({ theme }) => ({
   position: "relative",
@@ -173,6 +260,7 @@ const SectionTitle = styled(Typography)(({ theme }) => ({
     borderRadius: "2px",
   },
 }));
+SectionTitle.displayName = "SectionTitle";
 
 const StyledFab = styled(Fab)(({ theme }) => ({
   position: "fixed",
@@ -181,6 +269,7 @@ const StyledFab = styled(Fab)(({ theme }) => ({
   boxShadow: "0 8px 16px rgba(76, 175, 80, 0.3)",
   zIndex: 1000,
 }));
+StyledFab.displayName = "StyledFab";
 
 const ActionButton = styled(Button)(({ theme }) => ({
   borderRadius: theme.shape.borderRadius * 2,
@@ -194,6 +283,7 @@ const ActionButton = styled(Button)(({ theme }) => ({
     boxShadow: "0 6px 20px rgba(0, 0, 0, 0.15)",
   },
 }));
+ActionButton.displayName = "ActionButton";
 
 const rotateAnimation = keyframes`
   from { transform: rotate(0deg); }
@@ -216,7 +306,9 @@ const fadeInUp = keyframes`
   }
 `;
 
-const GridContainer = styled("div")(({ theme }) => ({
+const GridContainer = styled("div", { 
+  shouldForwardProp: (prop) => prop !== "theme" 
+})(({ theme }) => ({
   display: "grid",
   gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
   gap: "30px",
@@ -225,6 +317,7 @@ const GridContainer = styled("div")(({ theme }) => ({
     gap: "20px",
   },
 }));
+GridContainer.displayName = "GridContainer";
 
 const fadeInUpVariants = {
   hidden: { opacity: 0, y: 30 },
@@ -432,6 +525,9 @@ const PantryItemCard = ({
     </Card>
   );
 };
+
+// Add display name
+PantryItemCard.displayName = 'PantryItemCard';
 
 export default function Home() {
   const [items, setItems] = useState([]);

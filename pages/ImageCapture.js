@@ -23,6 +23,7 @@ import {
   Alert,
   useTheme,
 } from "@mui/material";
+import Image from "next/image";
 import { analyzeImageWithGptVisionAPI } from "../app/visionApi";
 import { useRouter } from "next/router";
 
@@ -373,15 +374,20 @@ const ImageCapture = () => {
             ) : (
               // Captured image preview
               <Box sx={{ height: '100%', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <img
-                  src={image}
-                  alt="Captured food items"
-                  style={{ 
-                    maxHeight: '100%',
-                    maxWidth: '100%',
-                    objectFit: 'contain',
-                  }}
-                />
+                <Box sx={{ position: 'relative', width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  {image && (
+                    <Box
+                      component="img"
+                      src={image}
+                      alt="Captured food items"
+                      sx={{ 
+                        maxHeight: '100%',
+                        maxWidth: '100%',
+                        objectFit: 'contain',
+                      }}
+                    />
+                  )}
+                </Box>
                 
                 {/* Processing overlay */}
                 {(isUploading || isAnalyzing) && (

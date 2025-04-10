@@ -29,6 +29,81 @@ import EditIcon from '@mui/icons-material/Edit';
 import FoodLottieAnimation from "./components/lottie/FoodLottieAnimation";
 import FoodPatternBackground from "./components/design/FoodPatternBackground";
 
+// Try using a simple Box instead of FoodPatternBackground if imports are causing issues
+const SimpleFoodPatternBackground = ({ category, density, opacity }) => {
+  const bgColors = {
+    fruit: 'rgba(255, 107, 107, 0.05)',
+    vegetable: 'rgba(81, 207, 102, 0.05)',
+    meat: 'rgba(230, 73, 128, 0.05)',
+    dairy: 'rgba(248, 249, 250, 0.05)',
+    grain: 'rgba(252, 196, 25, 0.05)',
+    mixed: 'rgba(173, 181, 189, 0.05)',
+  };
+  
+  const bgColor = bgColors[category] || bgColors.mixed;
+  
+  return (
+    <Box
+      sx={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: -1,
+        opacity,
+        bgcolor: bgColor,
+        backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)',
+        backgroundSize: '20px 20px',
+      }}
+    />
+  );
+};
+
+// Simple animated icon fallback
+const SimpleFoodAnimation = ({ foodCategory, height, width }) => {
+  const foodEmojis = {
+    fruit: '🍎',
+    vegetable: '🥦',
+    meat: '🥩',
+    dairy: '🧀',
+    grain: '🌾',
+    spice: '🌶️',
+    pasta: '🍝',
+    seafood: '🦐',
+    default: '🍽️'
+  };
+  
+  const emoji = foodEmojis[foodCategory] || foodEmojis.default;
+  
+  return (
+    <Box
+      sx={{
+        height,
+        width,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        fontSize: '3rem',
+        animation: 'pulse 2s infinite ease-in-out',
+        '@keyframes pulse': {
+          '0%': {
+            transform: 'scale(1)',
+          },
+          '50%': {
+            transform: 'scale(1.1)',
+          },
+          '100%': {
+            transform: 'scale(1)',
+          },
+        },
+      }}
+    >
+      {emoji}
+    </Box>
+  );
+};
+
 // Icons for categories
 import KitchenIcon from '@mui/icons-material/Kitchen';
 import LocalDiningIcon from '@mui/icons-material/LocalDining';
@@ -116,7 +191,7 @@ const EditItemModal = ({
     >
       <Box sx={{ position: 'relative', overflow: 'hidden' }}>
         {/* Food pattern background based on selected category */}
-        <FoodPatternBackground 
+        <SimpleFoodPatternBackground
           category={categoryVisual.pattern} 
           density={10} 
           opacity={0.15} 
@@ -171,7 +246,7 @@ const EditItemModal = ({
                 bgcolor: 'rgba(255, 255, 255, 0.7)',
                 boxShadow: 'inset 0 0 0 1px rgba(0, 0, 0, 0.1)'
               }}>
-                <FoodLottieAnimation 
+                <SimpleFoodAnimation 
                   foodCategory={categoryVisual.lottie} 
                   height={100} 
                   width={100} 

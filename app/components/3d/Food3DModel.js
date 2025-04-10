@@ -32,52 +32,42 @@ const Model = ({
   // Select the model path based on category or use default
   const modelPath = modelPaths[foodCategory] || modelPaths.default;
   
-  // Try to load the model, but provide a fallback in case it fails
+  // State for handling model loading errors
   const [modelError, setModelError] = useState(false);
+  const [sceneObj, setSceneObj] = useState(null);
   
-  try {
-    // Suspense will handle loading state
-    const { scene } = useGLTF(modelPath);
-    
-    // Handle rotation animation
-    useFrame((state, delta) => {
-      if (autoRotate && group.current) {
-        group.current.rotation.y += rotationSpeed;
-      }
-    });
-
-    if (modelError) {
-      // Use a fallback cube if model loading failed
-      return (
-        <group ref={group} position={position}>
-          <mesh scale={scale * 0.5}>
-            <boxGeometry args={[1, 1, 1]} />
-            <meshStandardMaterial color={getFoodColor(foodCategory)} />
-          </mesh>
-        </group>
-      );
-    }
-
-    return (
-      <group ref={group} position={position} scale={[scale, scale, scale]}>
-        <primitive object={scene} />
-      </group>
-    );
-  } catch (error) {
-    // If error loading the model, use a simple fallback shape
-    useEffect(() => {
-      console.warn(`Error loading model for ${foodCategory}:`, error);
+  // Load the model outside of render conditions
+  useEffect(() => {
+    try {
+      // Attempt to load the model
+      const loadModel = async () => {
+        try {
+          const gltf = await useGLTF.load(modelPath);
+          setSceneObj(gltf.scene);
+          setModelError(false);
+        } catch (error) {
+          console.warn(`Error loading model for ${foodCategory}:`, error);
+          setModelError(true);
+        }
+      };
+      
+      loadModel();
+    } catch (error) {
+      console.warn(`Error in model loading effect for ${foodCategory}:`, error);
       setModelError(true);
-    }, [foodCategory]);
+    }
+  }, [foodCategory, modelPath]);
+  
+  // Handle rotation animation - always call this hook
+  useFrame((state, delta) => {
+    if (autoRotate && group.current) {
+      group.current.rotation.y += rotationSpeed;
+    }
+  });
 
-    // Handle rotation for fallback shape
-    useFrame((state, delta) => {
-      if (autoRotate && group.current) {
-        group.current.rotation.y += rotationSpeed;
-      }
-    });
-
-    // Return a simple colored cube as fallback
+  // Render based on the loading state
+  if (modelError) {
+    // Fallback cube if model loading failed
     return (
       <group ref={group} position={position}>
         <mesh scale={scale * 0.5}>
@@ -87,6 +77,18 @@ const Model = ({
       </group>
     );
   }
+  
+  if (!sceneObj) {
+    // Return empty group while loading
+    return <group ref={group} position={position} />;
+  }
+  
+  // Successfully loaded model
+  return (
+    <group ref={group} position={position} scale={[scale, scale, scale]}>
+      <primitive object={sceneObj} />
+    </group>
+  );
 };
 
 // Helper function to get color based on food category

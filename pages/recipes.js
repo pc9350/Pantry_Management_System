@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { db } from '../app/firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import { ThemeProvider } from '@mui/material/styles';
@@ -57,6 +57,8 @@ const RecipesPage = () => {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [recipesPerPage] = useState(9);
+  const [filteredRecipes, setFilteredRecipes] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
   
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -71,51 +73,13 @@ const RecipesPage = () => {
     { value: 'whole30', label: 'Whole30' },
   ];
 
-  // Fetch pantry items from Firestore
-  useEffect(() => {
-    const fetchPantryItems = async () => {
-      try {
-        const itemsCollectionRef = collection(db, 'items');
-        const itemsSnapshot = await getDocs(itemsCollectionRef);
-        const itemsList = itemsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setPantryItems(itemsList);
-        
-        if (itemsList.length > 0) {
-          // Automatically fetch recipes based on pantry ingredients
-          handleFetchRecipes(itemsList);
-        } else {
-          setLoading(false);
-        }
-      } catch (err) {
-        console.error('Error fetching pantry items:', err);
-        setError('Failed to load pantry items');
-        setLoading(false);
-      }
-    };
-
-    fetchPantryItems();
-    
-    // Load saved recipes from localStorage
-    const loadSavedRecipes = () => {
-      const saved = localStorage.getItem('savedRecipes');
-      if (saved) {
-        setSavedRecipes(JSON.parse(saved));
-      }
-    };
-    
-    loadSavedRecipes();
-  }, []);
-
-  // Fetch recipes based on pantry ingredients
-  const handleFetchRecipes = async (items = pantryItems) => {
+  // Fetch recipes based on pantry ingredients - define this first to avoid circular dependency
+  const handleFetchRecipes = useCallback(async (items) => {
     setLoading(true);
     setError(null);
     
     try {
-      const ingredientList = items.map(item => item.name);
+      const ingredientList = items?.map(item => item.name) || [];
       const fetchedRecipes = await fetchRecipes(ingredientList);
       setRecipes(fetchedRecipes);
       setLoading(false);
@@ -124,7 +88,49 @@ const RecipesPage = () => {
       setError('Failed to fetch recipes. Please try again later.');
       setLoading(false);
     }
-  };
+  }, []); // No dependencies to avoid circular reference
+
+  // Fetch pantry items from Firestore
+  const fetchPantryItems = useCallback(async () => {
+    try {
+      const itemsCollectionRef = collection(db, 'items');
+      const itemsSnapshot = await getDocs(itemsCollectionRef);
+      const itemsList = itemsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setPantryItems(itemsList);
+      
+      if (itemsList.length > 0 && recipes.length === 0) {
+        // Automatically fetch recipes based on pantry ingredients
+        handleFetchRecipes(itemsList);
+      } else {
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error('Error fetching pantry items:', err);
+      setError('Failed to load pantry items');
+      setLoading(false);
+    }
+  }, [handleFetchRecipes, recipes.length]);
+
+  // Load saved recipes from localStorage
+  const loadSavedRecipes = useCallback(() => {
+    try {
+      const saved = localStorage.getItem('savedRecipes');
+      if (saved) {
+        setSavedRecipes(JSON.parse(saved));
+      }
+    } catch (error) {
+      console.error('Error loading saved recipes:', error);
+    }
+  }, []);
+
+  // Initial data loading
+  useEffect(() => {
+    fetchPantryItems();
+    loadSavedRecipes();
+  }, [fetchPantryItems, loadSavedRecipes]);
 
   // Handle recipe card click
   const handleRecipeClick = (recipe) => {
@@ -154,49 +160,50 @@ const RecipesPage = () => {
   };
   
   // Filter and search recipes
-  const filteredRecipes = React.useMemo(() => {
-    let filtered = activeTab === 'saved' ? savedRecipes : recipes;
-    
-    // Text search
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+  useEffect(() => {
+    // Function to filter and paginate recipes
+    const filterAndPaginateRecipes = () => {
+      let filtered = activeTab === 'saved' ? savedRecipes : recipes;
+      
+      // Apply search filter
+      if (searchQuery) {
+        filtered = filtered.filter(recipe => 
+          recipe.title.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      }
+      
+      // Apply diet type filter
+      if (filters.dietType !== 'all') {
+        filtered = filtered.filter(recipe => 
+          recipe.dietType && recipe.dietType.includes(filters.dietType)
+        );
+      }
+      
+      // Apply cooking time filter
       filtered = filtered.filter(recipe => 
-        recipe.title.toLowerCase().includes(query) || 
-        (recipe.diets && recipe.diets.some(diet => diet.toLowerCase().includes(query)))
+        recipe.cookingTimeMinutes >= filters.cookingTime[0] && 
+        recipe.cookingTimeMinutes <= filters.cookingTime[1]
       );
-    }
+      
+      // Apply match percentage filter for non-saved recipes
+      if (activeTab !== 'saved' && filters.matchPercentage > 0) {
+        filtered = filtered.filter(recipe => 
+          recipe.matchPercentage >= filters.matchPercentage
+        );
+      }
+      
+      setFilteredRecipes(filtered);
+      setTotalPages(Math.ceil(filtered.length / recipesPerPage));
+      setCurrentPage(1); // Reset to first page whenever filters change
+    };
     
-    // Diet type filter
-    if (filters.dietType !== 'all') {
-      filtered = filtered.filter(recipe => 
-        recipe.diets && recipe.diets.some(diet => diet.toLowerCase() === filters.dietType)
-      );
-    }
-    
-    // Cooking time filter
-    filtered = filtered.filter(recipe => {
-      const cookingTime = recipe.readyInMinutes || 30; // Default to 30 min if not specified
-      return cookingTime >= filters.cookingTime[0] && cookingTime <= filters.cookingTime[1];
-    });
-    
-    // Match percentage filter (only for recipes from pantry items)
-    if (activeTab !== 'saved' && filters.matchPercentage > 0) {
-      filtered = filtered.filter(recipe => {
-        const matchPercentage = recipe.missedIngredientCount 
-          ? Math.round(100 * (recipe.usedIngredientCount / (recipe.usedIngredientCount + recipe.missedIngredientCount)))
-          : 100;
-        return matchPercentage >= filters.matchPercentage;
-      });
-    }
-    
-    return filtered;
-  }, [recipes, savedRecipes, searchQuery, filters, activeTab]);
+    filterAndPaginateRecipes();
+  }, [recipes, savedRecipes, searchQuery, filters, activeTab, recipesPerPage]);
   
   // Pagination
   const indexOfLastRecipe = currentPage * recipesPerPage;
   const indexOfFirstRecipe = indexOfLastRecipe - recipesPerPage;
   const currentRecipes = filteredRecipes.slice(indexOfFirstRecipe, indexOfLastRecipe);
-  const totalPages = Math.ceil(filteredRecipes.length / recipesPerPage);
   
   const handlePageChange = (event, value) => {
     setCurrentPage(value);
@@ -219,7 +226,7 @@ const RecipesPage = () => {
     });
     setSearchQuery('');
   };
-  
+
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -231,7 +238,7 @@ const RecipesPage = () => {
               Recipe Recommendations
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Discover delicious recipes based on what's already in your pantry.
+              Discover delicious recipes based on what&apos;s already in your pantry.
             </Typography>
           </Box>
           

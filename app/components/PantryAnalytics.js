@@ -204,7 +204,7 @@ const PantryAnalytics = ({ items }) => {
               Item Usage Over Time
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Track how many items you've used each day
+              Track how many items you&apos;ve used each day
             </Typography>
             <Divider sx={{ my: 2 }} />
             <Box sx={{ height: 200, width: '100%' }}>
