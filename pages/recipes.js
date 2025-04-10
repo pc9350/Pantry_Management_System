@@ -36,8 +36,19 @@ import RestaurantIcon from '@mui/icons-material/Restaurant';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import dynamic from 'next/dynamic';
+
+// Use dynamic import with ssr: false to prevent server-side rendering
+const RecipesPageContent = dynamic(() => Promise.resolve(RecipesPageContentComponent), {
+  ssr: false,
+});
 
 const RecipesPage = () => {
+  return <RecipesPageContent />;
+};
+
+// Move all component logic to a client-only component
+const RecipesPageContentComponent = () => {
   const [pantryItems, setPantryItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -117,9 +128,12 @@ const RecipesPage = () => {
   // Load saved recipes from localStorage
   const loadSavedRecipes = useCallback(() => {
     try {
-      const saved = localStorage.getItem('savedRecipes');
-      if (saved) {
-        setSavedRecipes(JSON.parse(saved));
+      // Only attempt to access localStorage on the client side
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('savedRecipes');
+        if (saved) {
+          setSavedRecipes(JSON.parse(saved));
+        }
       }
     } catch (error) {
       console.error('Error loading saved recipes:', error);
@@ -156,7 +170,11 @@ const RecipesPage = () => {
     }
     
     setSavedRecipes(updatedSavedRecipes);
-    localStorage.setItem('savedRecipes', JSON.stringify(updatedSavedRecipes));
+    
+    // Only access localStorage on the client side
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('savedRecipes', JSON.stringify(updatedSavedRecipes));
+    }
   };
   
   // Filter and search recipes
