@@ -24,6 +24,8 @@ import {
   Pagination,
   Divider,
   useMediaQuery,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import Navbar from '../app/components/Navbar';
 import RecipeCard from '../app/components/RecipeCard';
@@ -157,9 +159,36 @@ const RecipesPageContentComponent = () => {
       if (typeof window !== 'undefined') {
         const saved = localStorage.getItem('savedRecipes');
         if (saved) {
-          const parsedRecipes = JSON.parse(saved);
-          console.log('Loaded saved recipes:', parsedRecipes.length);
-          setSavedRecipes(parsedRecipes);
+          try {
+            const parsedRecipes = JSON.parse(saved);
+            console.log('Loaded saved recipes:', parsedRecipes.length);
+            
+            // Ensure all recipes have the correct flags
+            const normalizedRecipes = parsedRecipes.map(recipe => ({
+              ...recipe,
+              // Ensure both flags are consistently set
+              isCustomRecipe: recipe.isCustomRecipe || recipe.isCustomGenerated || false,
+              isCustomGenerated: recipe.isCustomGenerated || recipe.isCustomRecipe || false,
+              // Ensure source is set
+              source: recipe.isCustomRecipe || recipe.isCustomGenerated ? 'ai-generated' : 'spoonacular',
+            }));
+            
+            // Log what we loaded for debugging
+            console.log('Recipe types loaded:',
+              normalizedRecipes.filter(r => r.isCustomRecipe || r.isCustomGenerated).length, 'AI-generated,',
+              normalizedRecipes.filter(r => !r.isCustomRecipe && !r.isCustomGenerated).length, 'Spoonacular'
+            );
+            
+            setSavedRecipes(normalizedRecipes);
+          } catch (parseError) {
+            console.error('Error parsing saved recipes JSON:', parseError);
+            setSavedRecipes([]);
+            
+            // This could be corrupted data, try to reset it
+            if (window.confirm('Your saved recipes data appears to be corrupted. Would you like to reset it?')) {
+              localStorage.setItem('savedRecipes', JSON.stringify([]));
+            }
+          }
         } else {
           console.log('No saved recipes found in localStorage');
           setSavedRecipes([]);
@@ -280,6 +309,11 @@ const RecipesPageContentComponent = () => {
           // Store other details
           diets: recipe.diets || [],
           extendedIngredients: recipe.extendedIngredients || [],
+          // Ensure appropriate flags are set
+          isCustomRecipe: recipe.isCustomRecipe || false, 
+          isCustomGenerated: recipe.isCustomGenerated || false,
+          // Flag indicating source
+          source: recipe.isCustomRecipe || recipe.isCustomGenerated ? 'ai-generated' : 'spoonacular',
           // Calculate match percentage
           matchPercentage: recipe.matchPercentage || 
             (recipe.missedIngredientCount !== undefined && recipe.usedIngredientCount !== undefined 
@@ -294,7 +328,16 @@ const RecipesPageContentComponent = () => {
       
       // Save to localStorage
       if (typeof window !== 'undefined') {
-        localStorage.setItem('savedRecipes', JSON.stringify(updatedSavedRecipes));
+        try {
+          localStorage.setItem('savedRecipes', JSON.stringify(updatedSavedRecipes));
+          
+          // Force a refresh of recipes in parent components
+          window.dispatchEvent(new Event('storage'));
+        } catch (storageError) {
+          console.error("Error saving to localStorage:", storageError);
+          // If localStorage fails, at least update the state
+          alert("Could not save recipe to local storage. Your browser storage might be full.");
+        }
       }
     } catch (error) {
       console.error("Error saving recipe:", error);
@@ -356,11 +399,37 @@ const RecipesPageContentComponent = () => {
       
       let filtered = activeTab === 'saved' ? savedRecipes : recipes;
       
+      // DEBUG: Log the types of recipes we're filtering
+      if (activeTab === 'saved' && savedRecipes.length > 0) {
+        const aiRecipes = savedRecipes.filter(r => r.isCustomRecipe || r.isCustomGenerated).length;
+        const spoonacularRecipes = savedRecipes.filter(r => !r.isCustomRecipe && !r.isCustomGenerated).length;
+        console.log(`In saved tab, processing: ${aiRecipes} AI recipes, ${spoonacularRecipes} Spoonacular recipes`);
+      }
+      
       console.log(`Initial filtered count: ${filtered.length}`);
       
       // If we're on the saved tab but don't have recipes loaded, try to reload
       if (activeTab === 'saved' && savedRecipes.length === 0) {
         console.log('No saved recipes loaded, attempting to reload from localStorage');
+        
+        // Directly try to load from localStorage here for immediate effect
+        try {
+          const saved = localStorage.getItem('savedRecipes');
+          if (saved) {
+            const parsedRecipes = JSON.parse(saved);
+            if (Array.isArray(parsedRecipes) && parsedRecipes.length > 0) {
+              console.log(`Found ${parsedRecipes.length} saved recipes in localStorage, using directly`);
+              // Use these recipes directly for filtering
+              filtered = parsedRecipes;
+            } else {
+              console.log('No valid saved recipes found in localStorage');
+            }
+          }
+        } catch (e) {
+          console.error('Error reading localStorage directly:', e);
+        }
+        
+        // Also trigger the full reload through the regular callback
         const hasSavedRecipes = debugLocalStorage();
         
         if (hasSavedRecipes) {
@@ -407,6 +476,13 @@ const RecipesPageContentComponent = () => {
         // resetFilters(); // Uncomment this if you want to auto-reset filters
       }
       
+      // After filtering, log the types of recipes that remained
+      if (activeTab === 'saved' && filtered.length > 0) {
+        const aiRecipes = filtered.filter(r => r.isCustomRecipe || r.isCustomGenerated).length;
+        const spoonacularRecipes = filtered.filter(r => !r.isCustomRecipe && !r.isCustomGenerated).length;
+        console.log(`After filtering: ${aiRecipes} AI recipes, ${spoonacularRecipes} Spoonacular recipes`);
+      }
+      
       console.log(`Final filtered count: ${filtered.length}`);
       setFilteredRecipes(filtered);
       setTotalPages(Math.ceil(filtered.length / recipesPerPage));
@@ -420,7 +496,7 @@ const RecipesPageContentComponent = () => {
     };
     
     filterAndPaginateRecipes();
-  }, [recipes, savedRecipes, searchQuery, filters, activeTab, recipesPerPage]);
+  }, [recipes, savedRecipes, searchQuery, filters, activeTab, recipesPerPage, debugLocalStorage]);
   
   // Fix pagination calculation to ensure we're showing recipes correctly
   // Modify the pagination calculations to ensure we're getting the right slice of recipes
@@ -987,6 +1063,26 @@ const RecipesPageContentComponent = () => {
               >
                 Saved ({savedRecipes.length})
               </Button>
+              {activeTab === 'saved' && (
+                <Tooltip title="Refresh saved recipes from storage">
+                  <IconButton 
+                    size="small" 
+                    color="primary" 
+                    onClick={() => {
+                      // Force reload saved recipes
+                      loadSavedRecipes();
+                      // Small delay before updating UI
+                      setTimeout(() => {
+                        // Force a re-filter by updating filters
+                        setFilters(prev => ({...prev}));
+                      }, 100);
+                    }}
+                    sx={{ ml: 0.5 }}
+                  >
+                    <RefreshIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              )}
               <Button
                 variant="contained"
                 color="secondary"
