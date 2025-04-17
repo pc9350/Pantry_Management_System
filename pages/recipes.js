@@ -219,6 +219,36 @@ const RecipesPageContentComponent = () => {
     setSelectedRecipe(null);
   };
   
+  // Add function to delete a recipe
+  const handleDeleteRecipe = (recipe) => {
+    // Confirm before deleting
+    if (window.confirm(`Are you sure you want to delete "${recipe.title}"?`)) {
+      try {
+        // Remove from saved recipes
+        const updatedSavedRecipes = savedRecipes.filter(saved => saved.id !== recipe.id);
+        
+        // Update state
+        setSavedRecipes(updatedSavedRecipes);
+        
+        // Update localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('savedRecipes', JSON.stringify(updatedSavedRecipes));
+        }
+        
+        // Show confirmation message
+        alert(`Recipe "${recipe.title}" has been deleted.`);
+        
+        // If we're now empty, force UI update
+        if (updatedSavedRecipes.length === 0 && activeTab === 'saved') {
+          setFilteredRecipes([]);
+        }
+      } catch (error) {
+        console.error("Error deleting recipe:", error);
+        alert("Failed to delete recipe. Please try again.");
+      }
+    }
+  };
+  
   // Toggle save recipe
   const handleSaveRecipe = (recipe) => {
     try {
@@ -736,7 +766,8 @@ const RecipesPageContentComponent = () => {
     savedRecipes, 
     activeTab,
     onView,
-    onSave 
+    onSave,
+    onDelete
   }) => {
     if (!recipes || recipes.length === 0) {
       // If we were passed empty recipes but we know there are saved recipes and we're on saved tab
@@ -755,6 +786,7 @@ const RecipesPageContentComponent = () => {
                     recipe={recipe}
                     onView={onView}
                     onSave={onSave}
+                    onDelete={onDelete}
                     saved={true}
                     missingIngredients={[]}
                     showMatchPercentage={false}
@@ -807,6 +839,7 @@ const RecipesPageContentComponent = () => {
                 recipe={recipe}
                 onView={onView}
                 onSave={onSave}
+                onDelete={activeTab === 'saved' ? onDelete : null}
                 saved={isSaved}
                 missingIngredients={missingIngredients}
                 showMatchPercentage={activeTab !== 'saved'}
@@ -1274,6 +1307,7 @@ const RecipesPageContentComponent = () => {
                 activeTab={activeTab}
                 onView={handleRecipeClick}
                 onSave={handleSaveRecipe}
+                onDelete={handleDeleteRecipe}
               />
               
               {/* Show a message if we have filtered recipes but none are displayed due to pagination issues */}
@@ -1317,6 +1351,7 @@ const RecipesPageContentComponent = () => {
           savedRecipes={savedRecipes}
           onTryCustomRecipe={handleOpenCustomRecipeModal}
           onSaveRecipe={handleSaveRecipe}
+          onDeleteRecipe={handleDeleteRecipe}
         />
         
         <CustomRecipeModal

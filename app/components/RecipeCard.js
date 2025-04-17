@@ -21,6 +21,7 @@ import BookmarkIcon from '@mui/icons-material/Bookmark';
 import StarIcon from '@mui/icons-material/Star';
 import InfoIcon from '@mui/icons-material/Info';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { motion } from 'framer-motion';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 
@@ -84,6 +85,7 @@ const RecipeCard = ({
   recipe, 
   onView, 
   onSave, 
+  onDelete,
   saved = false,
   missingIngredients = [],
   showMatchPercentage = true
@@ -102,8 +104,8 @@ const RecipeCard = ({
   // Demo score
   const score = recipe.spoonacularScore ? Math.round(recipe.spoonacularScore / 20) : Math.floor(Math.random() * 3) + 3;
 
-  // Check if this is a custom AI-generated recipe
-  const isCustomRecipe = recipe.isCustomGenerated === true;
+  // Check if this is a custom AI-generated recipe - handle both flag variants
+  const isCustomRecipe = recipe.isCustomRecipe || recipe.isCustomGenerated;
 
   return (
     <RecipeCardContainer
@@ -147,23 +149,50 @@ const RecipeCard = ({
             }}
           />
           
-          {/* Save button */}
-          <IconButton
-            aria-label={saved ? 'Unsave recipe' : 'Save recipe'}
-            onClick={() => onSave(recipe)}
-            sx={{
-              position: 'absolute',
-              bottom: 8,
-              right: 8,
-              backgroundColor: 'rgba(255, 255, 255, 0.9)',
-              '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 1)',
-              },
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            }}
-          >
-            {saved ? <BookmarkIcon color="primary" /> : <BookmarkBorderIcon />}
-          </IconButton>
+          {/* Action buttons */}
+          <Box sx={{ 
+            position: 'absolute', 
+            bottom: 8, 
+            right: 8, 
+            display: 'flex', 
+            gap: 1 
+          }}>
+            {/* Delete button - only show for saved recipes */}
+            {saved && onDelete && (
+              <IconButton
+                aria-label="Delete recipe"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(recipe);
+                }}
+                sx={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 1)',
+                    color: '#f44336',
+                  },
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                }}
+              >
+                <DeleteOutlineIcon />
+              </IconButton>
+            )}
+            
+            {/* Save button */}
+            <IconButton
+              aria-label={saved ? 'Unsave recipe' : 'Save recipe'}
+              onClick={() => onSave(recipe)}
+              sx={{
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 1)',
+                },
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              }}
+            >
+              {saved ? <BookmarkIcon color="primary" /> : <BookmarkBorderIcon />}
+            </IconButton>
+          </Box>
         </Box>
         
         <CardContent sx={{ flexGrow: 1, pt: 2 }}>

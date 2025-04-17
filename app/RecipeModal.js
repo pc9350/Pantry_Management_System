@@ -27,6 +27,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import ImageIcon from '@mui/icons-material/Image';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
@@ -60,10 +61,18 @@ const sanitizeText = (text) => {
   return text.replace(/<\/?[^>]+(>|$)/g, '');
 };
 
-const RecipeModal = ({ open, handleClose, recipe, onTryCustomRecipe, onSaveRecipe, savedRecipes = [] }) => {
+const RecipeModal = ({ 
+  open, 
+  handleClose, 
+  recipe, 
+  onTryCustomRecipe, 
+  onSaveRecipe, 
+  onDeleteRecipe, 
+  savedRecipes = [] 
+}) => {
   if (!recipe) return null;
   
-  // Check if this is a custom AI-generated recipe
+  // Check if this is a custom AI-generated recipe - handle both flag variations
   const isCustomRecipe = recipe.isCustomRecipe || recipe.isCustomGenerated;
   
   // Check if this recipe is already saved
@@ -418,7 +427,22 @@ const RecipeModal = ({ open, handleClose, recipe, onTryCustomRecipe, onSaveRecip
         )}
       </DialogContent>
       
-      <DialogActions sx={{ p: 2, pt: 0 }}>
+      <DialogActions sx={{ p: 2, pt: 0, display: 'flex', justifyContent: 'space-between' }}>
+        <Box>
+          {/* Delete button - only show for saved recipes */}
+          {isAlreadySaved && onDeleteRecipe && (
+            <Button 
+              onClick={() => {
+                handleClose();
+                onDeleteRecipe(recipe);
+              }} 
+              color="error"
+              startIcon={<DeleteOutlineIcon />}
+            >
+              Delete Recipe
+            </Button>
+          )}
+        </Box>
         <Button onClick={handleClose} color="inherit">Close</Button>
       </DialogActions>
     </Dialog>

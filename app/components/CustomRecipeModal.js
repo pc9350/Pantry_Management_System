@@ -318,6 +318,7 @@ const CustomRecipeModal = ({ open, handleClose, pantryItems = [], handleCustomRe
       imageType: 'jpg',
       sourceUrl: '#',
       isCustomRecipe: true,
+      isCustomGenerated: true,
       generatedAt: new Date().toISOString(),
       imageOptionUsed: imageOption // Save which option was used for potential future edits
     };
