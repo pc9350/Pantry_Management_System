@@ -388,7 +388,7 @@ const EditItemModal = ({
             disabled={
               !editingItem?.name || 
               !editingItem?.category || 
-              !editingItem?.quantity || 
+              isNaN(parseFloat(editingItem?.quantity)) || 
               !editingItem?.unit ||
               isSubmitting
             }
@@ -399,7 +399,7 @@ const EditItemModal = ({
               fontWeight: 600,
             }}
           >
-            {editingItem?.id ? "Update" : "Add to Pantry"}
+            {isSubmitting ? "Saving..." : (editingItem?.id ? "Update Item" : "Add to Pantry")}
           </Button>
         </DialogActions>
       </Box>

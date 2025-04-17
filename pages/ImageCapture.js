@@ -68,13 +68,13 @@ const ImageCapture = () => {
   // Capture image from camera
   const captureImage = () => {
     try {
-      const photo = camera.current.takePhoto();
-      fetch(photo)
-        .then((res) => res.blob())
-        .then((blob) => {
+    const photo = camera.current.takePhoto();
+    fetch(photo)
+      .then((res) => res.blob())
+      .then((blob) => {
           const file = new File([blob], `pantry-scan-${Date.now()}.png`, { type: "image/png" });
-          setFile(file);
-          setImage(photo);
+        setFile(file);
+        setImage(photo);
           
           // Show success message
           displayAlert("Image captured successfully", "success");
@@ -111,40 +111,40 @@ const ImageCapture = () => {
         },
         async () => {
           try {
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
             
             // Upload complete, start analysis
             setIsUploading(false);
             setIsAnalyzing(true);
             displayAlert("Analyzing image with AI...", "info");
 
-            // Analyze the image and get item names using the URL
-            const items = await analyzeImageWithGptVisionAPI(downloadURL);
+          // Analyze the image and get item names using the URL
+          const items = await analyzeImageWithGptVisionAPI(downloadURL);
             setDetectedItems(items || []);
 
-            // Store the image URL in Firestore
-            await addDoc(collection(db, "images"), {
-              imageUrl: downloadURL,
-              createdAt: new Date(),
-            });
+          // Store the image URL in Firestore
+          await addDoc(collection(db, "images"), {
+            imageUrl: downloadURL,
+            createdAt: new Date(),
+          });
 
-            // Store the detected items in Firestore
-            if (!items || items.length === 0) {
+          // Store the detected items in Firestore
+          if (!items || items.length === 0) {
               displayAlert("No food items recognized in the image", "warning");
-            } else {
+          } else {
               // Delay adding items slightly to show the detected items UI
               await new Promise(resolve => setTimeout(resolve, 1500));
               
               const promises = items.map(async (item) => {
                 return addDoc(collection(db, "items"), {
-                  name: item.name,
-                  quantity: item.quantity || 1,
-                  category: item.category || "Unknown",
-                  unit: item.unit || "piece",
-                  imageUrl: downloadURL,
-                  createdAt: new Date(),
-                });
+                name: item.name,
+                quantity: item.quantity || 1,
+                category: item.category || "Unknown",
+                unit: item.unit || "piece",
+                imageUrl: downloadURL,
+                createdAt: new Date(),
               });
+            });
               
               await Promise.all(promises);
               displayAlert(`Added ${items.length} items to your pantry!`, "success");
@@ -327,7 +327,7 @@ const ImageCapture = () => {
                       <Typography 
                         variant="body2" 
                         color="white" 
-                        sx={{ 
+      sx={{
                           textAlign: 'center', 
                           bgcolor: 'rgba(0,0,0,0.5)', 
                           p: 1,
@@ -353,7 +353,7 @@ const ImageCapture = () => {
                 }}>
                   <IconButton
                     onClick={captureImage}
-                    sx={{
+        sx={{
                       width: 70,
                       height: 70,
                       bgcolor: 'white',
@@ -370,17 +370,17 @@ const ImageCapture = () => {
                     Tap to capture
                   </Typography>
                 </Box>
-              </Box>
+      </Box>
             ) : (
               // Captured image preview
               <Box sx={{ height: '100%', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 <Box sx={{ position: 'relative', width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   {image && (
-                    <Box
+      <Box
                       component="img"
                       src={image}
                       alt="Captured food items"
-                      sx={{ 
+        sx={{
                         maxHeight: '100%',
                         maxWidth: '100%',
                         objectFit: 'contain',
@@ -393,7 +393,7 @@ const ImageCapture = () => {
                 {(isUploading || isAnalyzing) && (
                   <Backdrop
                     open={true}
-                    sx={{
+          sx={{
                       position: 'absolute',
                       zIndex: 999,
                       backgroundColor: 'rgba(0, 0, 0, 0.7)',
@@ -497,7 +497,7 @@ const ImageCapture = () => {
                         }}
                       >
                         Capture Image
-                      </Button>
+          </Button>
                     </Grid>
                   )}
                   
@@ -566,13 +566,13 @@ const ImageCapture = () => {
                     Return to Pantry
                   </Button>
                 ) : (
-                  <Button
+            <Button
                     fullWidth
                     variant="contained"
                     startIcon={<CloudUploadIcon />}
-                    onClick={handleUpload}
+              onClick={handleUpload}
                     disabled={isUploading || isAnalyzing || !file}
-                    sx={{
+              sx={{
                       py: 1.5,
                       bgcolor: theme.palette.secondary.main,
                       color: 'white',
@@ -607,12 +607,12 @@ const ImageCapture = () => {
                     sx={{ mt: 2, color: 'text.secondary' }}
                   >
                     Cancel
-                  </Button>
+            </Button>
                 )}
               </>
             )}
           </Paper>
-        </Box>
+          </Box>
       </Paper>
       
       {/* Alert snackbar */}

@@ -22,6 +22,7 @@ import StarIcon from '@mui/icons-material/Star';
 import InfoIcon from '@mui/icons-material/Info';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { motion } from 'framer-motion';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 
 const StyledChip = styled(Chip)(({ theme }) => ({
   borderRadius: 4,
@@ -61,6 +62,24 @@ const OverlayBadge = styled(Box)(({ theme, color }) => ({
   boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
 }));
 
+// Add a badge for AI-generated recipes
+const AiBadge = styled(Box)(({ theme }) => ({
+  position: 'absolute',
+  top: 12,
+  right: 12,
+  padding: '4px 8px',
+  borderRadius: theme.shape.borderRadius,
+  backgroundColor: theme.palette.secondary.main,
+  color: '#FFF',
+  fontWeight: 600,
+  fontSize: '0.75rem',
+  zIndex: 5,
+  boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '4px',
+}));
+
 const RecipeCard = ({ 
   recipe, 
   onView, 
@@ -70,9 +89,9 @@ const RecipeCard = ({
   showMatchPercentage = true
 }) => {
   // Calculate match percentage
-  const matchPercentage = recipe.missedIngredientCount 
+  const matchPercentage = recipe.matchPercentage || (recipe.missedIngredientCount 
     ? Math.round(100 * (recipe.usedIngredientCount / (recipe.usedIngredientCount + recipe.missedIngredientCount)))
-    : 100;
+    : 100);
   
   // Format cooking time (in minutes)
   const cookingTime = recipe.readyInMinutes || Math.floor(Math.random() * 30) + 15; // Fallback to random time for demo
@@ -83,6 +102,9 @@ const RecipeCard = ({
   // Demo score
   const score = recipe.spoonacularScore ? Math.round(recipe.spoonacularScore / 20) : Math.floor(Math.random() * 3) + 3;
 
+  // Check if this is a custom AI-generated recipe
+  const isCustomRecipe = recipe.isCustomGenerated === true;
+
   return (
     <RecipeCardContainer
       initial={{ opacity: 0, y: 20 }}
@@ -91,12 +113,20 @@ const RecipeCard = ({
     >
       <StyledCard>
         {/* Match percentage badge */}
-        {showMatchPercentage && (
+        {showMatchPercentage && !isCustomRecipe && (
           <OverlayBadge 
             color={matchPercentage > 80 ? '#4caf50' : matchPercentage > 50 ? '#ff9800' : '#f44336'}
           >
             {matchPercentage}% match
           </OverlayBadge>
+        )}
+        
+        {/* Custom recipe badge */}
+        {isCustomRecipe && (
+          <AiBadge>
+            <AutoAwesomeIcon fontSize="inherit" />
+            AI Recipe
+          </AiBadge>
         )}
         
         {/* Recipe Image */}
@@ -109,6 +139,11 @@ const RecipeCard = ({
             sx={{ 
               objectFit: 'cover',
               filter: 'brightness(0.9)',
+            }}
+            onError={(e) => {
+              // If image fails to load, use the fallback
+              e.target.onerror = null;
+              e.target.src = "/recipe-fallback.svg";
             }}
           />
           

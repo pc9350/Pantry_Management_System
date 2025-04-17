@@ -39,7 +39,14 @@ import {
   ListItemIcon,
   Card,
   CardContent,
-  CardActions
+  CardActions,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  List,
+  ListItem,
+  ListItemText
 } from "@mui/material";
 import { styled, alpha, useTheme, useMediaQuery } from "@mui/material";
 import KitchenIcon from "@mui/icons-material/Kitchen";
@@ -62,7 +69,35 @@ import RestaurantIcon from "@mui/icons-material/Restaurant";
 import LocalDiningIcon from "@mui/icons-material/LocalDining";
 import AnalyticsIcon from "@mui/icons-material/Analytics";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { v4 as uuidv4 } from "uuid";
+import CustomRecipeModal from "../app/components/CustomRecipeModal";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+
+// Food category mapping for visuals - copied from EditItemModal.js
+const categoryIcons = {
+  "Fruit": { icon: '🍎', lottie: 'fruit', pattern: 'fruit', color: '#ff6b6b' },
+  "Vegetable": { icon: '🥦', lottie: 'vegetable', pattern: 'vegetable', color: '#51cf66' },
+  "Dairy": { icon: '🧀', lottie: 'dairy', pattern: 'dairy', color: '#f8f9fa' },
+  "Meat": { icon: '🥩', lottie: 'meat', pattern: 'meat', color: '#e64980' },
+  "Grain": { icon: '🌾', lottie: 'grain', pattern: 'grain', color: '#fcc419' },
+  "Snack": { icon: '🍿', lottie: 'mixed', pattern: 'mixed', color: '#fd7e14' },
+  "Flour": { icon: '🍞', lottie: 'grain', pattern: 'grain', color: '#e9ecef' },
+  "Seeds": { icon: '🌱', lottie: 'vegetable', pattern: 'vegetable', color: '#8ce99a' },
+  "Spices": { icon: '🌶️', lottie: 'spice', pattern: 'mixed', color: '#ff922b' },
+  "Beverages": { icon: '🧃', lottie: 'mixed', pattern: 'mixed', color: '#74c0fc' },
+  "Canned Goods": { icon: '🥫', lottie: 'mixed', pattern: 'mixed', color: '#adb5bd' },
+  "Condiments": { icon: '🧂', lottie: 'spice', pattern: 'mixed', color: '#ffe066' },
+  "Frozen": { icon: '🧊', lottie: 'mixed', pattern: 'mixed', color: '#a5d8ff' },
+  "Baking Supplies": { icon: '🍰', lottie: 'dairy', pattern: 'dairy', color: '#f8f9fa' },
+  "Nuts": { icon: '🥜', lottie: 'grain', pattern: 'grain', color: '#e5dbcf' },
+  "Oils": { icon: '🫒', lottie: 'mixed', pattern: 'mixed', color: '#ffd43b' },
+  "Pasta": { icon: '🍝', lottie: 'pasta', pattern: 'grain', color: '#f9d71c' },
+  "Rice": { icon: '🍚', lottie: 'grain', pattern: 'grain', color: '#f8f9fa' },
+  "Sauces": { icon: '🍯', lottie: 'mixed', pattern: 'mixed', color: '#fa5252' },
+  "Seafood": { icon: '🦐', lottie: 'seafood', pattern: 'meat', color: '#ff8787' },
+  "Unknown": { icon: '🍽️', lottie: 'default', pattern: 'mixed', color: '#adb5bd' },
+};
 
 // Import lightweight design components instead of 3D
 import PantryAnalytics from "../app/components/PantryAnalytics";
@@ -241,6 +276,10 @@ const MainContainer = styled(Container, {
   marginTop: -100,
   paddingTop: 0,
   paddingBottom: theme.spacing(8),
+  [theme.breakpoints.down("md")]: {
+    marginTop: 0,
+    paddingTop: theme.spacing(2),
+  },
 }));
 MainContainer.displayName = "MainContainer";
 
@@ -264,7 +303,7 @@ SectionTitle.displayName = "SectionTitle";
 
 const StyledFab = styled(Fab)(({ theme }) => ({
   position: "fixed",
-  bottom: theme.spacing(4),
+  bottom: theme.spacing(12),
   right: theme.spacing(4),
   boxShadow: "0 8px 16px rgba(76, 175, 80, 0.3)",
   zIndex: 1000,
@@ -341,187 +380,180 @@ const PantryItemCard = ({
   onFindRecipes,
   onUseItem
 }) => {
-  const categoryEmojis = {
-    'Fruit': '🍎',
-    'Vegetable': '🥦',
-    'Dairy': '🧀',
-    'Meat': '🥩',
-    'Grain': '🌾',
-    'Snack': '🍿',
-    'Flour': '🌾',
-    'Seeds': '🌱',
-    'Spices': '🌶️',
-    'Beverages': '🥤',
-    'Canned Goods': '🥫',
-    'Condiments': '🧂',
-    'Frozen': '❄️',
-    'Baking Supplies': '🧁',
-    'Nuts': '🥜',
-    'Oils': '🫒',
-    'Pasta': '🍝',
-    'Rice': '🍚',
-    'Sauces': '🥫',
-    'Seafood': '🐟',
-  };
-
   const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
-
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
+  // Get category data for visualization - ensure it exists with fallback
+  const categoryData = categoryIcons[item.category] || categoryIcons["Unknown"];
+  
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
-
+  
   const handleClose = () => {
     setAnchorEl(null);
   };
-
+  
   const getCategoryEmoji = (category) => {
-    return categoryEmojis[category] || '🍽️';
+    return categoryIcons[category]?.icon || '🍽️';
   };
-
+  
   return (
     <Card 
-      sx={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        borderRadius: 3,
-        background: 'rgba(255, 255, 255, 0.9)',
-        backdropFilter: 'blur(8px)',
-        boxShadow: '0 8px 20px rgba(0, 0, 0, 0.1)',
-        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+      elevation={2} 
+      sx={{ 
+        display: 'flex', 
+        flexDirection: { xs: 'column', sm: 'row' },
+        height: { xs: 'auto', sm: 140 },
+        mb: 2, 
+        borderRadius: 2,
+        overflow: 'hidden',
+        position: 'relative',
+        transition: 'all 0.3s ease',
         '&:hover': {
-          transform: 'translateY(-8px)',
-          boxShadow: '0 12px 30px rgba(0, 0, 0, 0.15)',
+          transform: 'translateY(-2px)',
+          boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
         }
       }}
     >
+      {/* Visualization background */}
+      <Box sx={{ 
+        position: 'absolute', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        bottom: 0, 
+        zIndex: 0,
+        opacity: 0.08, 
+        background: 'linear-gradient(45deg, transparent 70%, rgba(142, 202, 230, 0.4))'
+      }} />
+      
+      {/* Colored accent based on category */}
       <Box 
         sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          p: 2,
-          borderBottom: '1px solid rgba(0, 0, 0, 0.08)'
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: { xs: '100%', sm: '4px' },
+          height: { xs: '4px', sm: '100%' },
+          bgcolor: categoryData.color || '#adb5bd',
+          zIndex: 2
+        }} 
+      />
+      
+      {/* Image/icon area */}
+      <Box 
+        sx={{ 
+          width: { xs: '100%', sm: 140 },
+          height: { xs: 100, sm: 140 },
+          position: 'relative',
+          bgcolor: 'rgba(255, 255, 255, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRight: { xs: 'none', sm: '1px solid rgba(0, 0, 0, 0.05)' },
+          borderBottom: { xs: '1px solid rgba(0, 0, 0, 0.05)', sm: 'none' },
+          padding: 2
         }}
       >
         <Box 
           sx={{ 
+            fontSize: { xs: '2.5rem', sm: '3rem' }, 
+            zIndex: 1, 
+            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            width: 50,
-            height: 50,
-            borderRadius: '50%',
-            fontSize: '2rem',
-            mr: 2,
-            background: 'rgba(76, 175, 80, 0.1)',
+            justifyContent: 'center'
           }}
         >
           {getCategoryEmoji(item.category)}
         </Box>
-        <Box sx={{ flexGrow: 1 }}>
-          <Typography variant="h6" component="h3" fontWeight="bold">
+      </Box>
+      
+      {/* Content area */}
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        flexGrow: 1,
+        justifyContent: 'space-between',
+        p: { xs: 1.5, sm: 2 },
+        position: 'relative',
+        zIndex: 1
+      }}>
+        {/* Item details */}
+        <Box>
+          <Typography variant="h6" component="h3" sx={{ mb: 0.5, fontWeight: 600 }}>
             {item.name}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {item.category}
-          </Typography>
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <Chip 
+              label={item.category} 
+              size="small"
+              sx={{ 
+                mr: 1, 
+                bgcolor: `${categoryData.color}20`, 
+                color: categoryData.color,
+                fontWeight: 500,
+                borderRadius: 1,
+              }} 
+            />
+            <Typography variant="body2" color="text.secondary">
+              {item.quantity} {item.unit}
+            </Typography>
+          </Box>
         </Box>
-        <IconButton 
-          aria-label="item-menu" 
-          onClick={handleClick}
-          size="small"
-        >
-          <MenuIcon fontSize="small" />
-        </IconButton>
-        <Menu
-          anchorEl={anchorEl}
-          open={open}
-          onClose={handleClose}
-        >
-          <MenuItem onClick={() => { handleClose(); onEdit(); }}>
-            <ListItemIcon>
-              <EditIcon fontSize="small" />
-            </ListItemIcon>
-            Edit
-          </MenuItem>
-          <MenuItem onClick={() => { handleClose(); onAddToShoppingList(); }}>
-            <ListItemIcon>
-              <ShoppingCartIcon fontSize="small" />
-            </ListItemIcon>
-            Add to Shopping List
-          </MenuItem>
-          <MenuItem onClick={() => { handleClose(); onFindRecipes(); }}>
-            <ListItemIcon>
+        
+        {/* Actions */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: { xs: 1, sm: 0 } }}>
+          <Box>
+            <Button 
+              size="small" 
+              onClick={() => onFindRecipes(item)}
+              sx={{ textTransform: 'none', mr: 1, display: { xs: 'none', sm: 'inline-flex' } }}
+            >
+              Find Recipes
+            </Button>
+            <IconButton 
+              size="small" 
+              onClick={() => onFindRecipes(item)}
+              sx={{ display: { xs: 'inline-flex', sm: 'none' } }}
+            >
               <RestaurantIcon fontSize="small" />
-            </ListItemIcon>
-            Find Recipes
-          </MenuItem>
-          <MenuItem onClick={() => { handleClose(); onUseItem(); }}>
-            <ListItemIcon>
-              <LocalDiningIcon fontSize="small" />
-            </ListItemIcon>
-            Mark As Used
-          </MenuItem>
-          <Divider />
-          <MenuItem onClick={() => { handleClose(); onDelete(); }}>
-            <ListItemIcon>
-              <DeleteIcon fontSize="small" color="error" />
-            </ListItemIcon>
-            <Typography color="error">Delete</Typography>
-          </MenuItem>
-        </Menu>
+            </IconButton>
+          </Box>
+          
+          <Box>
+            <IconButton size="small" onClick={() => onEdit(item)} sx={{ ml: 0.5 }}>
+              <EditIcon fontSize="small" />
+            </IconButton>
+            <IconButton size="small" onClick={() => onDelete(item.id)} sx={{ ml: 0.5 }}>
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+            <IconButton size="small" onClick={handleClick} sx={{ ml: 0.5 }}>
+              <MoreVertIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        </Box>
       </Box>
-      <CardContent sx={{ flexGrow: 1, p: 2 }}>
-        <Stack direction="row" spacing={2} alignItems="center" mb={1}>
-          <Typography variant="body1" fontWeight="medium">
-            {item.quantity} {item.unit}
-          </Typography>
-          {item.expiryProgress && (
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Box
-                sx={{
-                  width: 50,
-                  height: 6,
-                  borderRadius: 3,
-                  bgcolor: 'rgba(0, 0, 0, 0.1)',
-                  mr: 1,
-                }}
-              >
-                <Box
-                  sx={{
-                    height: '100%',
-                    borderRadius: 3,
-                    width: `${item.expiryProgress}%`,
-                    bgcolor: item.expiryProgress > 70 
-                      ? 'error.main' 
-                      : item.expiryProgress > 30 
-                      ? 'warning.main' 
-                      : 'success.main',
-                  }}
-                />
-              </Box>
-            </Box>
-          )}
-        </Stack>
-      </CardContent>
-      <CardActions sx={{ p: 2, pt: 0 }}>
-        <Button 
-          size="small" 
-          startIcon={<EditIcon />} 
-          onClick={onEdit}
-        >
-          Edit
-        </Button>
-        <Button 
-          size="small" 
-          startIcon={<RestaurantIcon />} 
-          onClick={onFindRecipes}
-          color="primary"
-        >
-          Recipes
-        </Button>
-      </CardActions>
+      
+      {/* Popup menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
+        PaperProps={{ sx: { width: 200, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' } }}
+      >
+        <MenuItem onClick={() => { onAddToShoppingList(item); handleClose(); }}>
+          <ListItemIcon><ShoppingCartIcon fontSize="small" /></ListItemIcon>
+          <Typography variant="body2">Add to Shopping List</Typography>
+        </MenuItem>
+        <MenuItem onClick={() => { onUseItem(item); handleClose(); }}>
+          <ListItemIcon><KitchenIcon fontSize="small" /></ListItemIcon>
+          <Typography variant="body2">Use Item</Typography>
+        </MenuItem>
+      </Menu>
     </Card>
   );
 };
@@ -542,6 +574,11 @@ export default function Home() {
   const [anchorEl, setAnchorEl] = useState(null);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [customRecipeModalOpen, setCustomRecipeModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('inventory');
+  const [recipeOptionsOpen, setRecipeOptionsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [recipeError, setRecipeError] = useState(null);
 
   const router = useRouter();
   const theme = useTheme();
@@ -617,9 +654,25 @@ export default function Home() {
   };
 
   const handleFetchRecipes = async () => {
-    const ingredientList = items.map((item) => item.name);
-    const fetchedRecipes = await fetchRecipes(ingredientList);
-    setRecipes(fetchedRecipes);
+    setLoading(true);
+    setRecipeError(null);
+    
+    try {
+      const ingredientList = items.map((item) => item.name);
+      const fetchedRecipes = await fetchRecipes(ingredientList);
+      setRecipes(fetchedRecipes);
+    } catch (err) {
+      console.error("Error fetching recipes:", err);
+      
+      // If the error appears to be API limit related
+      if (err.response && (err.response.status === 402 || err.response.status === 429)) {
+        setRecipeError('Spoonacular API daily limit reached. Try using the AI Recipe Generator!');
+      } else {
+        setRecipeError("Failed to fetch recipes. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRecipeClick = (recipe) => {
@@ -642,11 +695,11 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetchItems();
+        fetchItems();
   }, []);
 
   const filteredItems = items.filter((item) =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -705,6 +758,32 @@ export default function Home() {
     console.log("Used item:", item);
   };
 
+  const handleOpenCustomRecipeModal = () => {
+    setCustomRecipeModalOpen(true);
+  };
+
+  const handleCloseCustomRecipeModal = () => {
+    setCustomRecipeModalOpen(false);
+  };
+
+  const handleOpenRecipeOptions = () => {
+    setRecipeOptionsOpen(true);
+  };
+
+  const handleCloseRecipeOptions = () => {
+    setRecipeOptionsOpen(false);
+  };
+
+  const navigateToRecipes = () => {
+    handleCloseRecipeOptions();
+    router.push("/recipes");
+  };
+
+  const openCustomRecipe = () => {
+    handleCloseRecipeOptions();
+    handleOpenCustomRecipeModal();
+  };
+
   return (
     <Box sx={{ position: "relative", minHeight: "100vh", pb: 10 }}>
       {/* Ambient background with gradient */}
@@ -712,8 +791,8 @@ export default function Home() {
       
       {/* Hero section with stunning visuals */}
       <Box 
-        sx={{ 
-          height: '60vh',
+        sx={{
+          height: { xs: '35vh', sm: '60vh' },
           background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)',
           display: 'flex',
           flexDirection: 'column',
@@ -721,9 +800,9 @@ export default function Home() {
           alignItems: 'center',
           position: 'relative',
           overflow: 'hidden',
-          borderRadius: '0 0 30px 30px',
+          borderRadius: { xs: '0 0 15px 15px', sm: '0 0 30px 30px' },
           boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)',
-          marginBottom: 8
+          marginBottom: { xs: 4, sm: 8 }
         }}
       >
         {/* Food pattern background with emojis */}
@@ -738,14 +817,14 @@ export default function Home() {
             position: 'relative'
           }}
         >
-          <Typography 
+          <Typography
             variant="h1" 
-            sx={{ 
+            sx={{
               color: 'white', 
               fontWeight: 800,
-              fontSize: { xs: '3rem', md: '4.5rem' },
+              fontSize: { xs: '2.5rem', sm: '3rem', md: '4.5rem' },
               textShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
-              mb: 2
+              mb: { xs: 1, sm: 2 }
             }}
           >
             PantryPal
@@ -753,24 +832,33 @@ export default function Home() {
           
           <Typography 
             variant="h5"
-            sx={{ 
+            sx={{
               color: 'rgba(255, 255, 255, 0.85)', 
               maxWidth: 600,
               mx: 'auto',
-              mb: 4,
-              fontWeight: 400
+              mb: { xs: 3, sm: 4 },
+              fontWeight: 400,
+              fontSize: { xs: '1rem', sm: '1.25rem' }
             }}
           >
             Smart inventory for your kitchen. Reduce waste and discover delicious recipes.
           </Typography>
           
-          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <Box sx={{ 
+            display: 'flex', 
+            gap: { xs: 1, sm: 2 }, 
+            justifyContent: 'center', 
+            flexWrap: 'wrap' 
+          }}>
             <ActionButton
               variant="contained"
-              sx={{ 
+              sx={{
                 bgcolor: 'white', 
                 color: 'primary.dark',
-                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' }
+                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' },
+                px: { xs: 2, sm: 3 },
+                py: { xs: 1, sm: 1.5 },
+                fontSize: { xs: '0.875rem', sm: '1rem' }
               }}
               startIcon={<AddIcon />}
               onClick={() => handleClickOpen()}
@@ -780,103 +868,39 @@ export default function Home() {
             
             <ActionButton
               variant="outlined"
-              sx={{ 
+              sx={{
                 color: 'white', 
                 borderColor: 'white',
                 '&:hover': { 
                   borderColor: 'white', 
                   bgcolor: 'rgba(255, 255, 255, 0.1)' 
-                }
+                },
+                px: { xs: 2, sm: 3 },
+                py: { xs: 1, sm: 1.5 },
+                fontSize: { xs: '0.875rem', sm: '1rem' }
               }}
               startIcon={<MenuBookIcon />}
-              onClick={handleFetchRecipes}
+              onClick={() => router.push("/recipes")}
             >
               Find Recipes
             </ActionButton>
           </Box>
         </Box>
-        
-        {/* Food category icons in a row at the bottom */}
-        <Box
-          sx={{
-            position: 'absolute',
-            bottom: 20,
-            left: 0,
-            right: 0,
-            height: '80px',
-            display: 'flex',
-            justifyContent: 'center',
-            gap: { xs: 2, md: 4 },
-            px: 2,
-            zIndex: 2
-          }}
-        >
-          {[
-            { category: 'fruit', emoji: '🍎', label: 'Fruits' },
-            { category: 'vegetable', emoji: '🥦', label: 'Vegetables' },
-            { category: 'dairy', emoji: '🧀', label: 'Dairy' },
-            { category: 'grain', emoji: '🌾', label: 'Grains' },
-            { category: 'meat', emoji: '🥩', label: 'Meat' }
-          ].map((item, index) => (
-            <Box
-              key={item.category}
-              sx={{ 
-                opacity: 1,
-                transform: 'translateY(0)',
-                transition: 'transform 0.3s ease, opacity 0.3s ease'
-              }}
-            >
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  alignItems: 'center',
-                  bgcolor: 'rgba(255, 255, 255, 0.2)',
-                  backdropFilter: 'blur(8px)',
-                  p: 2,
-                  borderRadius: 2,
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-                  transition: 'transform 0.2s',
-                  '&:hover': {
-                    transform: 'translateY(-5px)'
-                  }
-                }}
-              >
-                <Typography 
-                  variant="h4" 
-                  component="span" 
-                  sx={{ fontSize: { xs: '1.5rem', md: '2rem' } }}
-                >
-                  {item.emoji}
-                </Typography>
-                <Typography 
-                  variant="caption" 
-                  sx={{ 
-                    color: 'white',
-                    fontWeight: 'medium',
-                    mt: 0.5,
-                    fontSize: { xs: '0.7rem', md: '0.8rem' }
-                  }}
-                >
-                  {item.label}
-                </Typography>
-              </Box>
-            </Box>
-          ))}
-        </Box>
       </Box>
-      
-      <MainContainer maxWidth="xl" sx={{ marginTop: { xs: 4, md: 0 } }}>
+
+      <MainContainer maxWidth="xl" sx={{ 
+        px: { xs: 2, sm: 3 }
+      }}>
         {/* Main Actions Bar */}
         <Box sx={{ mb: 4 }}>
           <Paper 
-            elevation={3}
-            sx={{ 
+              elevation={3}
+              sx={{
               p: 3, 
               mb: 5, 
               borderRadius: 4,
               display: 'flex',
-              flexDirection: { xs: 'column', md: 'row' },
+              flexDirection: { xs: 'column', sm: 'row' },
               alignItems: 'center',
               justifyContent: 'space-between',
               gap: 2,
@@ -896,48 +920,49 @@ export default function Home() {
               />
             </Box>
             
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              <Search>
-                <SearchIconWrapper>
-                  <SearchIcon />
-                </SearchIconWrapper>
-                <StyledInputBase
-                  placeholder="Search items…"
-                  inputProps={{ 'aria-label': 'search' }}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </Search>
+            <Box sx={{ 
+              display: 'flex',
+              gap: 2,
+              flexWrap: { xs: 'wrap', md: 'nowrap' },
+              justifyContent: 'center'
+            }}>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center'
+              }}>
+                <ActionButton
+                  variant="contained"
+                  color="primary"
+                  startIcon={<AddIcon />}
+                  onClick={() => handleClickOpen()}
+                  sx={{ whiteSpace: 'nowrap', minWidth: '140px' }}
+                >
+                  Add Manually
+                </ActionButton>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, textAlign: 'center' }}>
+                  Enter item details yourself
+                </Typography>
+              </Box>
               
-              <ActionButton
-                variant="contained"
-                color="primary"
-                startIcon={<AddIcon />}
-                onClick={() => handleClickOpen()}
-                sx={{ whiteSpace: 'nowrap' }}
-              >
-                Add Item
-              </ActionButton>
-              
-              <ActionButton
-                variant="outlined"
-                color="primary"
-                startIcon={<AddAPhotoIcon />}
-                onClick={() => router.push("/ImageCapture")}
-                sx={{ whiteSpace: 'nowrap' }}
-              >
-                Scan Items
-              </ActionButton>
-              
-              <ActionButton
-                variant="outlined"
-                color="secondary"
-                startIcon={<AnalyticsIcon />}
-                onClick={toggleAnalytics}
-                sx={{ whiteSpace: 'nowrap' }}
-              >
-                {showAnalytics ? "Hide Analytics" : "Show Analytics"}
-              </ActionButton>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column',
+                alignItems: 'center'
+              }}>
+                <ActionButton
+                  variant="outlined"
+                  color="primary"
+                  startIcon={<AddAPhotoIcon />}
+                  onClick={() => router.push("/ImageCapture")}
+                  sx={{ whiteSpace: 'nowrap', minWidth: '140px' }}
+                >
+                  Scan Items
+                </ActionButton>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, textAlign: 'center' }}>
+                  Use camera to capture items
+                </Typography>
+              </Box>
             </Box>
           </Paper>
         </Box>
@@ -957,9 +982,9 @@ export default function Home() {
           
           {filteredItems.length > 0 ? (
             <GridContainer>
-              {filteredItems.map((item, index) => (
+                  {filteredItems.map((item, index) => (
                 <Box
-                  key={item.id}
+                      key={item.id}
                   sx={{ 
                     height: '100%',
                     opacity: 1,
@@ -1023,7 +1048,7 @@ export default function Home() {
               {currentRecipes.map((recipe, index) => (
                 <Box
                   key={recipe.id}
-                  sx={{
+                sx={{
                     opacity: 1,
                     transform: 'translateY(0)',
                     transition: 'opacity 0.5s ease, transform 0.5s ease',
@@ -1032,11 +1057,11 @@ export default function Home() {
                 >
                   <CardContainer>
                     <Box sx={{ position: 'relative' }}>
-                      <CardMedia
-                        component="img"
+                    <CardMedia
+                      component="img"
                         height="160"
-                        image={recipe.image}
-                        alt={recipe.title}
+                      image={recipe.image}
+                      alt={recipe.title}
                         sx={{ borderRadius: 2 }}
                       />
                       <Chip
@@ -1045,16 +1070,16 @@ export default function Home() {
                           'Perfect match'}`}
                         color={recipe.missedIngredientCount > 2 ? "warning" : "success"}
                         size="small"
-                        sx={{ 
+                      sx={{
                           position: 'absolute', 
                           top: 10, 
                           right: 10,
                           fontWeight: 'bold'
-                        }}
-                      />
-                    </Box>
+                      }}
+                    />
+                  </Box>
                     
-                    <Box sx={{ mt: 2 }}>
+                  <Box sx={{ mt: 2 }}>
                       <TruncatedTypography variant="h6">
                         {recipe.title}
                       </TruncatedTypography>
@@ -1095,20 +1120,20 @@ export default function Home() {
                         >
                           View Recipe
                         </Button>
-                      </Box>
+                  </Box>
                     </Box>
-                  </CardContainer>
+              </CardContainer>
                 </Box>
               ))}
             </Box>
             
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
               <ActionButton
-                variant="outlined"
-                color="secondary"
+              variant="outlined"
+              color="secondary"
                 startIcon={<MenuBookIcon />}
                 onClick={() => router.push("/recipes")}
-              >
+            >
                 Explore All Recipes
               </ActionButton>
             </Box>
@@ -1233,6 +1258,7 @@ export default function Home() {
         open={recipeModalOpen}
         handleClose={handleRecipeModalClose}
         recipe={selectedRecipe}
+        onTryCustomRecipe={handleOpenCustomRecipeModal}
       />
       
       <Modal
@@ -1282,6 +1308,193 @@ export default function Home() {
           </Box>
         </Box>
       </Modal>
+
+      {/* Custom Recipe Modal */}
+      <CustomRecipeModal
+        open={customRecipeModalOpen}
+        handleClose={handleCloseCustomRecipeModal}
+        pantryItems={items}
+      />
+
+      {/* Recipe Explainer Dialog - Updated to use dedicated state */}
+      <Dialog 
+        open={recipeOptionsOpen}
+        onClose={handleCloseRecipeOptions}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Recipe Options</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" gutterBottom>
+            Choose how you'd like to find recipes:
+          </Typography>
+          
+          <List>
+            <ListItem button onClick={navigateToRecipes}>
+              <ListItemIcon>
+                <RestaurantIcon color="primary" />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Browse All Recipes" 
+                secondary="View all available recipes based on your pantry ingredients" 
+              />
+            </ListItem>
+            
+            <ListItem button onClick={openCustomRecipe}>
+              <ListItemIcon>
+                <AutoAwesomeIcon color="primary" />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Create Custom Recipe" 
+                secondary="Use AI to generate unique recipes with your ingredients" 
+              />
+            </ListItem>
+          </List>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseRecipeOptions}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Bottom actions - fix the Recipes tab click handler */}
+      <AppBar 
+        position="fixed" 
+        color="default" 
+        sx={{ 
+          top: 'auto', 
+          bottom: 0,
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
+          boxShadow: '0 -2px 10px rgba(0,0,0,0.05)',
+          borderTop: '1px solid rgba(0,0,0,0.04)'
+        }}
+      >
+        <Toolbar sx={{ 
+          justifyContent: 'space-around', 
+          minHeight: { xs: '72px', sm: '72px' },
+          px: 2
+        }}>
+          {[
+            { 
+              id: 'inventory', 
+              label: 'Pantry', 
+              icon: <KitchenIcon />, 
+              action: () => setActiveTab('inventory')
+            },
+            { 
+              id: 'add', 
+              label: 'Add', 
+              icon: <AddIcon />, 
+              action: () => {
+                setActiveTab('add');
+                handleClickOpen(null);
+              }
+            },
+            { 
+              id: 'recipes', 
+              label: 'Recipes', 
+              icon: <RestaurantIcon />, 
+              action: () => {
+                setActiveTab('recipes');
+                handleOpenRecipeOptions();
+              }
+            },
+            { 
+              id: 'search', 
+              label: 'Search', 
+              icon: <SearchIcon />, 
+              action: () => { 
+                setActiveTab('search');
+                handleSearchModalOpen();
+              }
+            },
+            { 
+              id: 'analytics', 
+              label: 'Stats', 
+              icon: <AnalyticsIcon />, 
+              action: () => { 
+                setActiveTab('analytics');
+                toggleAnalytics();
+              }
+            }
+          ].map((item) => {
+            const isActive = activeTab === item.id;
+            return (
+              <Box 
+                key={item.id}
+                onClick={item.action} 
+                sx={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  position: 'relative',
+                  minWidth: '56px',
+                  cursor: 'pointer',
+                  p: 1,
+                  color: isActive ? 'primary.main' : 'text.secondary',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    color: isActive ? 'primary.main' : 'text.primary',
+                    transform: 'translateY(-2px)'
+                  },
+                }}
+              >
+                {/* Active indicator dot */}
+                {isActive && (
+                  <Box 
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      width: '5px',
+                      height: '5px',
+                      borderRadius: '50%',
+                      bgcolor: 'primary.main',
+                      animation: 'pulse 1.5s infinite'
+                    }}
+                  />
+                )}
+                
+                {/* Icon with background on active */}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    p: 1,
+                    borderRadius: '50%',
+                    mb: 0.5,
+                    bgcolor: isActive ? 'primary.light' : 'transparent',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: isActive ? 'scale(1.1)' : 'scale(1)',
+                    '& svg': {
+                      fontSize: isActive ? '1.3rem' : '1.2rem',
+                      transition: 'all 0.2s ease',
+                      color: isActive ? 'primary.main' : 'inherit',
+                    }
+                  }}
+                >
+                  {item.icon}
+                </Box>
+                
+                <Typography 
+                  variant="caption" 
+                  sx={{
+                    fontSize: '0.7rem',
+                    fontWeight: isActive ? 600 : 400,
+                    opacity: isActive ? 1 : 0.8,
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  {item.label}
+                </Typography>
+              </Box>
+            );
+          })}
+        </Toolbar>
+      </AppBar>
     </Box>
   );
 }

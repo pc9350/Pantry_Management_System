@@ -9,7 +9,7 @@ const nextConfig = {
   ],
   // Disable server side rendering for pages that use localStorage or other browser APIs
   images: {
-    domains: ['spoonacular.com'],
+    domains: ['spoonacular.com', 'img.spoonacular.com'],
   },
   // Optimize CSS but disable critters since it's causing issues
   experimental: {
