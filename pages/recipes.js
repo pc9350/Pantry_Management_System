@@ -161,7 +161,6 @@ const RecipesPageContentComponent = () => {
         if (saved) {
           try {
             const parsedRecipes = JSON.parse(saved);
-            console.log('Loaded saved recipes:', parsedRecipes.length);
             
             // Ensure all recipes have the correct flags
             const normalizedRecipes = parsedRecipes.map(recipe => ({
@@ -172,12 +171,6 @@ const RecipesPageContentComponent = () => {
               // Ensure source is set
               source: recipe.isCustomRecipe || recipe.isCustomGenerated ? 'ai-generated' : 'spoonacular',
             }));
-            
-            // Log what we loaded for debugging
-            console.log('Recipe types loaded:',
-              normalizedRecipes.filter(r => r.isCustomRecipe || r.isCustomGenerated).length, 'AI-generated,',
-              normalizedRecipes.filter(r => !r.isCustomRecipe && !r.isCustomGenerated).length, 'Spoonacular'
-            );
             
             setSavedRecipes(normalizedRecipes);
           } catch (parseError) {
@@ -190,7 +183,6 @@ const RecipesPageContentComponent = () => {
             }
           }
         } else {
-          console.log('No saved recipes found in localStorage');
           setSavedRecipes([]);
         }
       }
@@ -201,9 +193,7 @@ const RecipesPageContentComponent = () => {
   }, []);
 
   // Improve the handleTabChange function to ensure it works correctly
-  const handleTabChange = (newTab) => {
-    console.log(`Switching to tab: ${newTab}`);
-    
+  const handleTabChange = useCallback((newTab) => {
     if (newTab === 'saved') {
       // Force reload saved recipes when switching to saved tab
       loadSavedRecipes();
@@ -215,7 +205,7 @@ const RecipesPageContentComponent = () => {
     
     // Reset current page when switching tabs
     setCurrentPage(1);
-  };
+  }, [loadSavedRecipes, recipes.length, error, handleFetchRecipes, pantryItems]);
 
   // Improve the useEffect to ensure saved recipes are loaded on initial render
   useEffect(() => {
@@ -344,23 +334,19 @@ const RecipesPageContentComponent = () => {
     }
   };
   
-  // Add a debug function for localStorage
-  const debugLocalStorage = () => {
+  // Add a debug function for localStorage that won't cause infinite loops
+  const debugLocalStorage = useCallback(() => {
     try {
       // Check if localStorage is available
       if (typeof window !== 'undefined') {
         const savedRecipesJSON = localStorage.getItem('savedRecipes');
-        console.log('Raw localStorage savedRecipes:', savedRecipesJSON);
         
         if (savedRecipesJSON) {
           try {
             const parsed = JSON.parse(savedRecipesJSON);
-            console.log('Parsed savedRecipes:', parsed);
-            console.log('Number of saved recipes:', parsed.length);
             
             // If we have saved recipes but the state doesn't reflect it, update state
             if (parsed.length > 0 && savedRecipes.length === 0) {
-              console.log('Updating savedRecipes state');
               setSavedRecipes(parsed);
               
               // If we're on the saved tab with no visible recipes, force a filter update
@@ -379,7 +365,6 @@ const RecipesPageContentComponent = () => {
             return false;
           }
         } else {
-          console.log('No savedRecipes in localStorage');
           return false;
         }
       }
@@ -387,116 +372,84 @@ const RecipesPageContentComponent = () => {
       console.error('Error accessing localStorage:', e);
       return false;
     }
-  };
+  }, [savedRecipes.length, activeTab, filteredRecipes.length]);
 
-  // Enhance the filterAndPaginateRecipes function to better handle the saved tab
-  useEffect(() => {
-    // Function to filter and paginate recipes
-    const filterAndPaginateRecipes = () => {
-      console.log(`Filtering recipes for tab: ${activeTab}`);
-      console.log(`savedRecipes.length: ${savedRecipes.length}`);
-      console.log(`recipes.length: ${recipes.length}`);
-      
-      let filtered = activeTab === 'saved' ? savedRecipes : recipes;
-      
-      // DEBUG: Log the types of recipes we're filtering
-      if (activeTab === 'saved' && savedRecipes.length > 0) {
-        const aiRecipes = savedRecipes.filter(r => r.isCustomRecipe || r.isCustomGenerated).length;
-        const spoonacularRecipes = savedRecipes.filter(r => !r.isCustomRecipe && !r.isCustomGenerated).length;
-        console.log(`In saved tab, processing: ${aiRecipes} AI recipes, ${spoonacularRecipes} Spoonacular recipes`);
-      }
-      
-      console.log(`Initial filtered count: ${filtered.length}`);
-      
-      // If we're on the saved tab but don't have recipes loaded, try to reload
-      if (activeTab === 'saved' && savedRecipes.length === 0) {
-        console.log('No saved recipes loaded, attempting to reload from localStorage');
-        
-        // Directly try to load from localStorage here for immediate effect
-        try {
-          const saved = localStorage.getItem('savedRecipes');
-          if (saved) {
-            const parsedRecipes = JSON.parse(saved);
-            if (Array.isArray(parsedRecipes) && parsedRecipes.length > 0) {
-              console.log(`Found ${parsedRecipes.length} saved recipes in localStorage, using directly`);
-              // Use these recipes directly for filtering
-              filtered = parsedRecipes;
-            } else {
-              console.log('No valid saved recipes found in localStorage');
-            }
-          }
-        } catch (e) {
-          console.error('Error reading localStorage directly:', e);
-        }
-        
-        // Also trigger the full reload through the regular callback
-        const hasSavedRecipes = debugLocalStorage();
-        
-        if (hasSavedRecipes) {
-          // We'll let the next effect run handle the update
-          console.log('Found saved recipes in localStorage that were not in state');
-          return;
-        }
-      }
-      
-      // Apply search filter
-      if (searchQuery) {
-        filtered = filtered.filter(recipe => 
-          recipe.title.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-      }
-      
-      // Apply diet type filter
-      if (filters.dietType !== 'all') {
-        filtered = filtered.filter(recipe => 
-          recipe.diets && recipe.diets.includes(filters.dietType)
-        );
-      }
-      
-      // Apply cooking time filter
-      filtered = filtered.filter(recipe => 
-        recipe.readyInMinutes >= filters.cookingTime[0] && 
-        recipe.readyInMinutes <= filters.cookingTime[1]
-      );
-      
-      // Apply match percentage filter for non-saved recipes
-      if (activeTab !== 'saved' && filters.matchPercentage > 0) {
-        filtered = filtered.filter(recipe => 
-          recipe.matchPercentage >= filters.matchPercentage
-        );
-      }
-      
-      // Important fix: if we're on saved tab and all filters resulted in zero recipes,
-      // but we know there are saved recipes, reset the filters and show all saved recipes
-      if (activeTab === 'saved' && filtered.length === 0 && savedRecipes.length > 0) {
-        console.log('No recipes pass filters, but we have saved recipes. Showing all saved recipes.');
-        filtered = savedRecipes;
-        
-        // Consider auto-resetting filters
-        // resetFilters(); // Uncomment this if you want to auto-reset filters
-      }
-      
-      // After filtering, log the types of recipes that remained
-      if (activeTab === 'saved' && filtered.length > 0) {
-        const aiRecipes = filtered.filter(r => r.isCustomRecipe || r.isCustomGenerated).length;
-        const spoonacularRecipes = filtered.filter(r => !r.isCustomRecipe && !r.isCustomGenerated).length;
-        console.log(`After filtering: ${aiRecipes} AI recipes, ${spoonacularRecipes} Spoonacular recipes`);
-      }
-      
-      console.log(`Final filtered count: ${filtered.length}`);
-      setFilteredRecipes(filtered);
-      setTotalPages(Math.ceil(filtered.length / recipesPerPage));
-      
-      // Ensure current page is valid
-      const maxValidPage = Math.max(1, Math.ceil(filtered.length / recipesPerPage));
-      if (currentPage > maxValidPage) {
-        console.log(`Current page ${currentPage} exceeds max valid page ${maxValidPage}. Resetting to page 1.`);
-        setCurrentPage(1);
-      }
-    };
+  // Create a memoized filtering function to avoid infinite re-renders
+  const filterAndPaginateRecipes = useCallback(() => {
+    let filtered = activeTab === 'saved' ? savedRecipes : recipes;
     
+    // If we're on the saved tab but don't have recipes loaded, try to reload
+    if (activeTab === 'saved' && savedRecipes.length === 0) {
+      // Directly try to load from localStorage here for immediate effect
+      try {
+        const saved = localStorage.getItem('savedRecipes');
+        if (saved) {
+          const parsedRecipes = JSON.parse(saved);
+          if (Array.isArray(parsedRecipes) && parsedRecipes.length > 0) {
+            // Use these recipes directly for filtering
+            filtered = parsedRecipes;
+          }
+        }
+      } catch (e) {
+        console.error('Error reading localStorage directly:', e);
+      }
+    }
+    
+    // Apply search filter
+    if (searchQuery) {
+      filtered = filtered.filter(recipe => 
+        recipe.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    // Apply diet type filter
+    if (filters.dietType !== 'all') {
+      filtered = filtered.filter(recipe => 
+        recipe.diets && recipe.diets.includes(filters.dietType)
+      );
+    }
+    
+    // Apply cooking time filter
+    filtered = filtered.filter(recipe => 
+      recipe.readyInMinutes >= filters.cookingTime[0] && 
+      recipe.readyInMinutes <= filters.cookingTime[1]
+    );
+    
+    // Apply match percentage filter for non-saved recipes
+    if (activeTab !== 'saved' && filters.matchPercentage > 0) {
+      filtered = filtered.filter(recipe => 
+        recipe.matchPercentage >= filters.matchPercentage
+      );
+    }
+    
+    // Important fix: if we're on saved tab and all filters resulted in zero recipes,
+    // but we know there are saved recipes, reset the filters and show all saved recipes
+    if (activeTab === 'saved' && filtered.length === 0 && savedRecipes.length > 0) {
+      filtered = savedRecipes;
+    }
+    
+    setFilteredRecipes(filtered);
+    setTotalPages(Math.ceil(filtered.length / recipesPerPage));
+    
+    // Ensure current page is valid
+    const maxValidPage = Math.max(1, Math.ceil(filtered.length / recipesPerPage));
+    if (currentPage > maxValidPage) {
+      setCurrentPage(1);
+    }
+  }, [
+    activeTab, 
+    recipes, 
+    savedRecipes, 
+    searchQuery, 
+    filters, 
+    recipesPerPage, 
+    currentPage
+  ]);
+
+  // Apply the filtering when relevant dependencies change
+  useEffect(() => {
     filterAndPaginateRecipes();
-  }, [recipes, savedRecipes, searchQuery, filters, activeTab, recipesPerPage, debugLocalStorage]);
+  }, [filterAndPaginateRecipes]);
   
   // Fix pagination calculation to ensure we're showing recipes correctly
   // Modify the pagination calculations to ensure we're getting the right slice of recipes
@@ -550,10 +503,8 @@ const RecipesPageContentComponent = () => {
     setCustomRecipeModalOpen(true);
   };
 
-  // Improve the handleCustomRecipeSave function to ensure recipe is saved properly
-  const handleCustomRecipeSave = (savedRecipe) => {
-    console.log('Custom recipe saved:', savedRecipe);
-    
+  // Enhance the handleCustomRecipeSave function to ensure recipe is saved properly
+  const handleCustomRecipeSave = useCallback((savedRecipe) => {
     // Reload saved recipes immediately to show the newly saved recipe
     loadSavedRecipes();
     
@@ -563,25 +514,19 @@ const RecipesPageContentComponent = () => {
       // Show success message
       alert(`Recipe "${savedRecipe.title}" has been saved! You can find it in the Saved Recipes tab.`);
     }, 500);
-  };
+  }, [loadSavedRecipes, handleTabChange]);
 
   // Enhance the handleCloseCustomRecipeModal function
-  const handleCloseCustomRecipeModal = () => {
+  const handleCloseCustomRecipeModal = useCallback(() => {
     setCustomRecipeModalOpen(false);
     
-    // After closing, check if we have saved recipes and reload them
-    debugLocalStorage();
-    
-    // If we're on the saved tab, refresh the list
+    // After closing, reload saved recipes if we're on the saved tab
     if (activeTab === 'saved') {
       loadSavedRecipes();
-      // Delay to ensure state is updated
-      setTimeout(() => {
-        // Force a re-filter by updating a filter
-        setFilters(prev => ({...prev}));
-      }, 100);
+      // Reset current page to ensure we see the first page of results
+      setCurrentPage(1);
     }
-  };
+  }, [activeTab, loadSavedRecipes]);
 
   // Modify the refreshApiStatus function to prioritize AI-generated recipes
   const refreshApiStatus = async () => {
@@ -603,7 +548,6 @@ const RecipesPageContentComponent = () => {
         setTimeout(() => {
           if (savedRecipes.length > 0) {
             setActiveTab('saved');
-            console.log(`Switched to saved tab with ${savedRecipes.length} recipes`);
           }
         }, 100);
         
@@ -816,19 +760,8 @@ const RecipesPageContentComponent = () => {
 
   // Add a direct recipe display when console logging shows recipes but nothing renders
   useEffect(() => {
-    // Debug why recipes aren't showing up
+    // Only run this when we have a real problem - recipes exist but aren't displaying
     if (activeTab === 'saved' && savedRecipes.length > 0 && filteredRecipes.length > 0 && currentRecipes.length === 0) {
-      console.error("Critical rendering error: Recipes exist but aren't displaying", {
-        activeTab,
-        savedRecipesCount: savedRecipes.length,
-        filteredRecipesCount: filteredRecipes.length,
-        currentRecipesCount: currentRecipes.length,
-        currentPage,
-        totalPages,
-        indexOfFirstRecipe,
-        indexOfLastRecipe
-      });
-      
       // Force current page to 1 if it's invalid
       if (currentPage > totalPages || currentPage < 1) {
         setCurrentPage(1);
@@ -849,11 +782,10 @@ const RecipesPageContentComponent = () => {
       // If we were passed empty recipes but we know there are saved recipes and we're on saved tab
       if (activeTab === 'saved' && savedRecipes && savedRecipes.length > 0) {
         // Directly render the saved recipes as a fallback
-        console.log('SafeRecipeList fallback: rendering savedRecipes directly', savedRecipes.length);
         return (
           <>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Fallback display: Showing {savedRecipes.length} saved recipes
+              Showing all saved recipes ({savedRecipes.length})
             </Typography>
             <Grid container spacing={3}>
               {savedRecipes.map((recipe) => (
@@ -1015,18 +947,15 @@ const RecipesPageContentComponent = () => {
                     variant="outlined" 
                     color="error" 
                     onClick={() => {
-                      console.log('Emergency recipe display fix');
-                      debugLocalStorage();
-                      setTimeout(() => {
-                        setCurrentPage(1);
-                        setFilters({
-                          dietType: 'all',
-                          cookingTime: [0, 120],
-                          matchPercentage: 0,
-                          includeIngredients: [],
-                          excludeIngredients: [],
-                        });
-                      }, 100);
+                      // Force resetters without logging
+                      setCurrentPage(1);
+                      setFilters({
+                        dietType: 'all',
+                        cookingTime: [0, 120],
+                        matchPercentage: 0,
+                        includeIngredients: [],
+                        excludeIngredients: [],
+                      });
                     }}
                     sx={{ mt: 1 }}
                   >

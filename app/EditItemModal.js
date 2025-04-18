@@ -145,6 +145,7 @@ const EditItemModal = ({
 }) => {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [currentCategory, setCurrentCategory] = useState(editingItem?.category || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -175,6 +176,14 @@ const EditItemModal = ({
   // Get category visual data
   const categoryVisual = categoryIcons[currentCategory] || categoryIcons.Unknown;
 
+  // Calculate if form is valid to enable the save button
+  const isFormValid = 
+    editingItem?.name && 
+    editingItem?.category && 
+    !isNaN(parseFloat(editingItem?.quantity)) && 
+    editingItem?.unit &&
+    !isSubmitting;
+
   return (
     <Dialog 
       open={open} 
@@ -182,14 +191,24 @@ const EditItemModal = ({
       fullScreen={fullScreen}
       maxWidth="sm"
       fullWidth
+      scroll="paper"
       PaperProps={{
         sx: {
           borderRadius: { xs: 0, sm: 4 },
-          overflow: 'hidden',
+          height: { xs: '100%', sm: 'auto' },
+          maxHeight: { xs: '100%', sm: '90vh' },
+          display: 'flex',
+          flexDirection: 'column',
         }
       }}
     >
-      <Box sx={{ position: 'relative', overflow: 'hidden' }}>
+      <Box sx={{ 
+        position: 'relative', 
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        flexGrow: 1,
+      }}>
         {/* Food pattern background based on selected category */}
         <SimpleFoodPatternBackground
           category={categoryVisual.pattern} 
@@ -205,6 +224,7 @@ const EditItemModal = ({
           alignItems: 'center',
           justifyContent: 'space-between',
           p: 2.5,
+          flexShrink: 0,
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Avatar 
@@ -231,30 +251,66 @@ const EditItemModal = ({
           </IconButton>
         </DialogTitle>
         
-        <DialogContent sx={{ p: { xs: 2, sm: 3 }, pt: { xs: 3, sm: 4 } }}>
+        <DialogContent 
+          sx={{ 
+            p: { xs: 2, sm: 3 }, 
+            pt: { xs: 3, sm: 4 },
+            flexGrow: 1,
+            overflowY: 'auto',
+          }}
+        >
           <Grid container spacing={3}>
-            <Grid item xs={12} sm={4} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
-              <Box sx={{ 
-                p: 1, 
-                height: 130, 
-                width: 130, 
-                borderRadius: 2, 
-                overflow: 'hidden',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                bgcolor: 'rgba(255, 255, 255, 0.7)',
-                boxShadow: 'inset 0 0 0 1px rgba(0, 0, 0, 0.1)'
-              }}>
-                <SimpleFoodAnimation 
-                  foodCategory={categoryVisual.lottie} 
-                  height={100} 
-                  width={100} 
-                />
-              </Box>
-            </Grid>
+            {!isMobile && (
+              <Grid item xs={12} sm={4} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
+                <Box sx={{ 
+                  p: 1, 
+                  height: 130, 
+                  width: 130, 
+                  borderRadius: 2, 
+                  overflow: 'hidden',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  bgcolor: 'rgba(255, 255, 255, 0.7)',
+                  boxShadow: 'inset 0 0 0 1px rgba(0, 0, 0, 0.1)'
+                }}>
+                  <SimpleFoodAnimation 
+                    foodCategory={categoryVisual.lottie} 
+                    height={100} 
+                    width={100} 
+                  />
+                </Box>
+              </Grid>
+            )}
             
-            <Grid item xs={12} sm={8}>
+            <Grid item xs={12} sm={isMobile ? 12 : 8}>
+              {isMobile && (
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'center', 
+                  mb: 2,
+                }}>
+                  <Box sx={{ 
+                    p: 1, 
+                    height: 100, 
+                    width: 100, 
+                    borderRadius: 2, 
+                    overflow: 'hidden',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    bgcolor: 'rgba(255, 255, 255, 0.7)',
+                    boxShadow: 'inset 0 0 0 1px rgba(0, 0, 0, 0.1)'
+                  }}>
+                    <SimpleFoodAnimation 
+                      foodCategory={categoryVisual.lottie} 
+                      height={80} 
+                      width={80} 
+                    />
+                  </Box>
+                </Box>
+              )}
+              
               <DialogContentText sx={{ mb: 2.5 }}>
                 {editingItem?.id
                   ? "Update the details of this food item."
@@ -368,8 +424,15 @@ const EditItemModal = ({
         
         <DialogActions sx={{ 
           p: { xs: 2, sm: 3 }, 
-          pt: 0,
-          justifyContent: 'space-between'
+          pt: { xs: 2, sm: 2 },
+          justifyContent: 'space-between',
+          bgcolor: theme.palette.background.paper,
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          flexShrink: 0,
+          position: 'sticky',
+          bottom: 0,
+          zIndex: 1,
         }}>
           <Button 
             onClick={handleClose} 
@@ -385,13 +448,7 @@ const EditItemModal = ({
             onClick={onSave} 
             variant="contained"
             color="primary"
-            disabled={
-              !editingItem?.name || 
-              !editingItem?.category || 
-              isNaN(parseFloat(editingItem?.quantity)) || 
-              !editingItem?.unit ||
-              isSubmitting
-            }
+            disabled={!isFormValid}
             sx={{ 
               px: 3,
               borderRadius: 1.5,
