@@ -156,7 +156,18 @@ const EditItemModal = ({
     } else {
       setCurrentCategory("");
     }
+    
+    // Reset the submitting state whenever the editingItem changes
+    setIsSubmitting(false);
   }, [editingItem]);
+
+  // Reset isSubmitting when modal is opened/closed
+  useEffect(() => {
+    if (!open) {
+      // Reset submitting state when modal is closed
+      setIsSubmitting(false);
+    }
+  }, [open]);
 
   const handleCategoryChange = (event) => {
     const newCategory = event.target.value;
@@ -173,6 +184,12 @@ const EditItemModal = ({
     handleSave();
   };
 
+  // Handle modal close with reset
+  const handleModalClose = () => {
+    setIsSubmitting(false);
+    handleClose();
+  };
+
   // Get category visual data
   const categoryVisual = categoryIcons[currentCategory] || categoryIcons.Unknown;
 
@@ -187,7 +204,7 @@ const EditItemModal = ({
   return (
     <Dialog 
       open={open} 
-      onClose={handleClose}
+      onClose={handleModalClose}
       fullScreen={fullScreen}
       maxWidth="sm"
       fullWidth
@@ -244,7 +261,7 @@ const EditItemModal = ({
           </Box>
           <IconButton
             aria-label="close"
-            onClick={handleClose}
+            onClick={handleModalClose}
             sx={{ color: 'white' }}
           >
             <CloseIcon />
@@ -435,7 +452,7 @@ const EditItemModal = ({
           zIndex: 1,
         }}>
           <Button 
-            onClick={handleClose} 
+            onClick={handleModalClose} 
             color="inherit"
             sx={{ 
               textTransform: 'none',
